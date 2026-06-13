@@ -42,210 +42,34 @@ import {
 
 // --- HDFC DCB Categories & Rules (Updated for June 2026 MITC) ---
 const CATEGORIES = [
-  {
-    id: "regular",
-    label: "Retail / General eligible spend",
-    multiplier: 1,
-    smartbuy: false,
-    baseEligible: true,
-  },
-  {
-    id: "weekend-dining",
-    label: "Weekend dining",
-    multiplier: 2,
-    smartbuy: false,
-    baseEligible: true,
-  },
-  {
-    id: "grocery",
-    label: "Groceries",
-    multiplier: 1,
-    smartbuy: false,
-    baseEligible: true,
-    rewardCapKey: "groceryMonthlyRewardCap",
-  },
-  {
-    id: "smartbuy-igp",
-    label: "SmartBuy IGP.com",
-    multiplier: 10,
-    smartbuy: true,
-    baseEligible: true,
-  },
-  {
-    id: "smartbuy-flights",
-    label: "SmartBuy flights",
-    multiplier: 5,
-    smartbuy: true,
-    baseEligible: true,
-  },
-  {
-    id: "smartbuy-hotels",
-    label: "SmartBuy hotels",
-    multiplier: 10,
-    smartbuy: true,
-    baseEligible: true,
-  },
-  {
-    id: "smartbuy-trains",
-    label: "SmartBuy trains",
-    multiplier: 3,
-    smartbuy: true,
-    baseEligible: true,
-  },
-  {
-    id: "smartbuy-buses",
-    label: "SmartBuy buses",
-    multiplier: 5,
-    smartbuy: true,
-    baseEligible: true,
-  },
-  {
-    id: "smartbuy-vouchers",
-    label: "SmartBuy brand vouchers",
-    multiplier: 3,
-    smartbuy: true,
-    baseEligible: true,
-  },
-  {
-    id: "smartbuy-apple",
-    label: "SmartBuy Apple Imagine/Tresor",
-    multiplier: 3,
-    smartbuy: true,
-    baseEligible: true,
-  },
-  {
-    id: "smartbuy-myntra",
-    label: "SmartBuy Myntra",
-    multiplier: 5,
-    smartbuy: true,
-    baseEligible: true,
-  },
-  {
-    id: "smartbuy-jockey",
-    label: "SmartBuy Jockey",
-    multiplier: 10,
-    smartbuy: true,
-    baseEligible: true,
-  },
-  {
-    id: "smartbuy-mmt-holidays",
-    label: "SmartBuy MMT holiday packages",
-    multiplier: 5,
-    smartbuy: true,
-    baseEligible: true,
-  },
-  {
-    id: "smartbuy-pharmeasy",
-    label: "SmartBuy Pharmeasy",
-    multiplier: 10,
-    smartbuy: true,
-    baseEligible: true,
-  },
-  {
-    id: "smartbuy-dutyfree",
-    label: "SmartBuy Duty Free",
-    multiplier: 5,
-    smartbuy: true,
-    baseEligible: true,
-  },
-  {
-    id: "smartbuy-drivado",
-    label: "SmartBuy Drivado",
-    multiplier: 5,
-    smartbuy: true,
-    baseEligible: true,
-  },
-  {
-    id: "insurance",
-    label: "Insurance",
-    multiplier: 1,
-    smartbuy: false,
-    baseEligible: true,
-    rewardCapKey: "insuranceMonthlyRewardCap",
-  },
-  {
-    id: "rent",
-    label: "Rent payment",
-    multiplier: 0,
-    smartbuy: false,
-    baseEligible: false,
-    isRent: true,
-  },
-  {
-    id: "fuel",
-    label: "Fuel",
-    multiplier: 0,
-    smartbuy: false,
-    baseEligible: false,
-    isFuel: true,
-  },
-  {
-    id: "utility",
-    label: "Utility",
-    multiplier: 1,
-    smartbuy: false,
-    baseEligible: true,
-    rewardCapKey: "utilityMonthlyRewardCap",
-    isUtility: true,
-  },
-  {
-    id: "telecom",
-    label: "Telecom",
-    multiplier: 1,
-    smartbuy: false,
-    baseEligible: true,
-    rewardCapKey: "telecomMonthlyRewardCap",
-  },
-  {
-    id: "upi",
-    label: "UPI card purchase",
-    multiplier: 1,
-    smartbuy: false,
-    baseEligible: true,
-  },
-  {
-    id: "education-third-party",
-    label: "Education via third-party app",
-    multiplier: 0,
-    smartbuy: false,
-    baseEligible: false,
-    isThirdPartyEd: true,
-  },
-  {
-    id: "government",
-    label: "Government transaction",
-    multiplier: 0,
-    smartbuy: false,
-    baseEligible: false,
-  },
-  {
-    id: "wallet",
-    label: "Wallet loading",
-    multiplier: 0,
-    smartbuy: false,
-    baseEligible: false,
-  },
-  {
-    id: "gaming",
-    label: "Online skill gaming",
-    multiplier: 0,
-    smartbuy: false,
-    baseEligible: false,
-  },
-  {
-    id: "emi",
-    label: "Converted to EMI / SmartEMI",
-    multiplier: 0,
-    smartbuy: false,
-    baseEligible: false,
-  },
-  {
-    id: "excluded",
-    label: "Excluded / no reward",
-    multiplier: 0,
-    smartbuy: false,
-    baseEligible: false,
-  },
+  { id: "regular", label: "Retail / General eligible spend", multiplier: 1, smartbuy: false, baseEligible: true },
+  { id: "weekend-dining", label: "Weekend dining", multiplier: 2, smartbuy: false, baseEligible: true },
+  { id: "grocery", label: "Groceries", multiplier: 1, smartbuy: false, baseEligible: true, rewardCapKey: "groceryMonthlyRewardCap" },
+  { id: "smartbuy-igp", label: "SmartBuy IGP.com", multiplier: 10, smartbuy: true, baseEligible: true },
+  { id: "smartbuy-flights", label: "SmartBuy flights", multiplier: 5, smartbuy: true, baseEligible: true },
+  { id: "smartbuy-hotels", label: "SmartBuy hotels", multiplier: 10, smartbuy: true, baseEligible: true },
+  { id: "smartbuy-trains", label: "SmartBuy trains", multiplier: 3, smartbuy: true, baseEligible: true },
+  { id: "smartbuy-buses", label: "SmartBuy buses", multiplier: 5, smartbuy: true, baseEligible: true },
+  { id: "smartbuy-vouchers", label: "SmartBuy brand vouchers", multiplier: 3, smartbuy: true, baseEligible: true },
+  { id: "smartbuy-apple", label: "SmartBuy Apple Imagine/Tresor", multiplier: 3, smartbuy: true, baseEligible: true },
+  { id: "smartbuy-myntra", label: "SmartBuy Myntra", multiplier: 5, smartbuy: true, baseEligible: true },
+  { id: "smartbuy-jockey", label: "SmartBuy Jockey", multiplier: 10, smartbuy: true, baseEligible: true },
+  { id: "smartbuy-mmt-holidays", label: "SmartBuy MMT holiday packages", multiplier: 5, smartbuy: true, baseEligible: true },
+  { id: "smartbuy-pharmeasy", label: "SmartBuy Pharmeasy", multiplier: 10, smartbuy: true, baseEligible: true },
+  { id: "smartbuy-dutyfree", label: "SmartBuy Duty Free", multiplier: 5, smartbuy: true, baseEligible: true },
+  { id: "smartbuy-drivado", label: "SmartBuy Drivado", multiplier: 5, smartbuy: true, baseEligible: true },
+  { id: "insurance", label: "Insurance", multiplier: 1, smartbuy: false, baseEligible: true, rewardCapKey: "insuranceMonthlyRewardCap" },
+  { id: "rent", label: "Rent payment", multiplier: 0, smartbuy: false, baseEligible: false, isRent: true },
+  { id: "fuel", label: "Fuel", multiplier: 0, smartbuy: false, baseEligible: false, isFuel: true },
+  { id: "utility", label: "Utility", multiplier: 1, smartbuy: false, baseEligible: true, rewardCapKey: "utilityMonthlyRewardCap", isUtility: true },
+  { id: "telecom", label: "Telecom", multiplier: 1, smartbuy: false, baseEligible: true, rewardCapKey: "telecomMonthlyRewardCap" },
+  { id: "upi", label: "UPI card purchase", multiplier: 1, smartbuy: false, baseEligible: true },
+  { id: "education-third-party", label: "Education via third-party app", multiplier: 0, smartbuy: false, baseEligible: false, isThirdPartyEd: true },
+  { id: "government", label: "Government transaction", multiplier: 0, smartbuy: false, baseEligible: false },
+  { id: "wallet", label: "Wallet loading", multiplier: 0, smartbuy: false, baseEligible: false },
+  { id: "gaming", label: "Online skill gaming", multiplier: 0, smartbuy: false, baseEligible: false },
+  { id: "emi", label: "Converted to EMI / SmartEMI", multiplier: 0, smartbuy: false, baseEligible: false },
+  { id: "excluded", label: "Excluded / no reward", multiplier: 0, smartbuy: false, baseEligible: false },
 ];
 
 const CAPS = {
@@ -259,27 +83,8 @@ const CAPS = {
   ANNUAL_MILESTONE: 800000,
 };
 
-const DEFAULT_CARDHOLDERS = [
-  "Primary Card",
-  "Add-on 1",
-  "Add-on 2",
-  "Add-on 3",
-  "Add-on 4",
-];
-const MONTHS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
+const DEFAULT_CARDHOLDERS = ["Primary Card", "Add-on 1", "Add-on 2", "Add-on 3", "Add-on 4"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 // Helper Formatter
 const formatDate = (dateString) => {
@@ -331,6 +136,7 @@ export default function App() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [editTxnId, setEditTxnId] = useState(null);
+  const [refundInput, setRefundInput] = useState("");
 
   const initialTxnState = {
     date: new Date().toISOString().substring(0, 10),
@@ -372,55 +178,34 @@ export default function App() {
   useEffect(() => {
     if (!user) return;
 
-    const unsubTxn = onSnapshot(
-      query(collection(db, "family_transactions")),
-      (snapshot) => {
-        setTransactions(
-          snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
-        );
+    const unsubTxn = onSnapshot(query(collection(db, "family_transactions")), (snapshot) => {
+      setTransactions(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      setLoading(false);
+    });
+
+    const unsubRewards = onSnapshot(query(collection(db, "family_rewards")), (snapshot) => {
+      setRewardsLog(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+    });
+
+    const unsubSet = onSnapshot(doc(db, "family_settings", "profile"), (docSnap) => {
+      if (docSnap.exists() && docSnap.data().cardholders) {
+        setCardholders(docSnap.data().cardholders);
+        setEditHolders(docSnap.data().cardholders);
+      } else {
         setLoading(false);
       }
-    );
+    });
 
-    const unsubRewards = onSnapshot(
-      query(collection(db, "family_rewards")),
-      (snapshot) => {
-        setRewardsLog(
-          snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
-        );
-      }
-    );
-
-    const unsubSet = onSnapshot(
-      doc(db, "family_settings", "profile"),
-      (docSnap) => {
-        if (docSnap.exists() && docSnap.data().cardholders) {
-          setCardholders(docSnap.data().cardholders);
-          setEditHolders(docSnap.data().cardholders);
-        } else {
-          setLoading(false);
-        }
-      }
-    );
-
-    return () => {
-      unsubTxn();
-      unsubRewards();
-      unsubSet();
-    };
+    return () => { unsubTxn(); unsubRewards(); unsubSet(); };
   }, [user]);
 
   useEffect(() => {
-    if (!newTxn.cardHolder && cardholders.length > 0)
-      setNewTxn((prev) => ({ ...prev, cardHolder: cardholders[0] }));
-    if (!newReward.cardHolder && cardholders.length > 0)
-      setNewReward((prev) => ({ ...prev, cardHolder: cardholders[0] }));
+    if (!newTxn.cardHolder && cardholders.length > 0) setNewTxn((prev) => ({ ...prev, cardHolder: cardholders[0] }));
+    if (!newReward.cardHolder && cardholders.length > 0) setNewReward((prev) => ({ ...prev, cardHolder: cardholders[0] }));
   }, [cardholders]);
 
   const processedData = useMemo(() => {
-    const sorted = [...transactions].sort(
-      (a, b) => new Date(a.date) - new Date(b.date)
-    );
+    const sorted = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
     const monthlyState = {};
     const processedTxns = [];
     const lifetimeEarnedRP = {};
@@ -431,77 +216,56 @@ export default function App() {
 
       if (!monthlyState[monthKey]) {
         monthlyState[monthKey] = {
-          groceryMonthlyRewardCap: 0,
-          utilityMonthlyRewardCap: 0,
-          telecomMonthlyRewardCap: 0,
-          insuranceMonthlyRewardCap: 0,
-          smartBuyBonusRP: 0,
-          dailyDining: {},
-          totalSpend: 0,
-          totalEarnedRP: 0,
-          totalFees: 0,
+          groceryMonthlyRewardCap: 0, utilityMonthlyRewardCap: 0, telecomMonthlyRewardCap: 0,
+          insuranceMonthlyRewardCap: 0, smartBuyBonusRP: 0, dailyDining: {},
+          totalSpend: 0, totalEarnedRP: 0, totalFees: 0, 
           feeBreakdown: { rent: 0, utility: 0, fuel: 0, education: 0 },
           cardholderSpends: {},
         };
       }
 
       const mState = monthlyState[monthKey];
-      const category =
-        CATEGORIES.find((c) => c.id === txn.categoryId) || CATEGORIES[0];
+      const category = CATEGORIES.find((c) => c.id === txn.categoryId) || CATEGORIES[0];
 
       mState.totalSpend += Number(txn.amount);
-      mState.cardholderSpends[txn.cardHolder] =
-        (mState.cardholderSpends[txn.cardHolder] || 0) + Number(txn.amount);
+      mState.cardholderSpends[txn.cardHolder] = (mState.cardholderSpends[txn.cardHolder] || 0) + Number(txn.amount);
 
-      let earnedRP = 0,
-        note = "",
-        fee = 0,
-        feeNote = "";
+      let earnedRP = 0, note = "", fee = 0, feeNote = "";
 
       // Fee Calcs
       if (category.isRent) {
-        fee = Math.min(Number(txn.amount) * 0.01, 3000);
+        fee = Math.min(Number(txn.amount) * 0.01, 3000); 
         feeNote = `+ ₹${fee.toLocaleString("en-IN")} Bank Fee`;
         mState.feeBreakdown.rent += fee;
       } else if (category.isThirdPartyEd) {
-        fee = Math.min(Number(txn.amount) * 0.01, 3000);
+        fee = Math.min(Number(txn.amount) * 0.01, 3000); 
         feeNote = `+ ₹${fee.toLocaleString("en-IN")} Bank Fee`;
         mState.feeBreakdown.education += fee;
       } else if (category.isUtility && Number(txn.amount) > 50000) {
-        fee = Math.min(Number(txn.amount) * 0.01, 3000);
+        fee = Math.min(Number(txn.amount) * 0.01, 3000); 
         feeNote = `+ ₹${fee.toLocaleString("en-IN")} Bank Fee`;
         mState.feeBreakdown.utility += fee;
       } else if (category.isFuel && Number(txn.amount) > 15000) {
-        fee = Math.min(Number(txn.amount) * 0.01, 3000);
+        fee = Math.min(Number(txn.amount) * 0.01, 3000); 
         feeNote = `+ ₹${fee.toLocaleString("en-IN")} Bank Fee`;
         mState.feeBreakdown.fuel += fee;
       }
       mState.totalFees += fee;
 
-      const baseRP = category.baseEligible
-        ? Math.floor(txn.amount / 150) * 5
-        : 0;
+      const baseRP = category.baseEligible ? Math.floor(txn.amount / 150) * 5 : 0;
 
       if (!category.baseEligible) {
-        earnedRP = 0;
-        if (!feeNote) note = "No points for this category";
+        earnedRP = 0; if (!feeNote) note = "No points for this category";
       } else if (category.smartbuy) {
-        const potentialBonus =
-          Math.floor(txn.amount / 150) * (5 * (category.multiplier - 1));
-        const allowedBonus = Math.min(
-          potentialBonus,
-          CAPS.SMARTBUY_BONUS_MONTHLY - mState.smartBuyBonusRP
-        );
+        const potentialBonus = Math.floor(txn.amount / 150) * (5 * (category.multiplier - 1));
+        const allowedBonus = Math.min(potentialBonus, CAPS.SMARTBUY_BONUS_MONTHLY - mState.smartBuyBonusRP);
         mState.smartBuyBonusRP += allowedBonus;
         earnedRP = baseRP + allowedBonus;
         if (allowedBonus < potentialBonus) note = "SmartBuy Cap Reached";
       } else if (category.id === "weekend-dining") {
         if (!mState.dailyDining[dateKey]) mState.dailyDining[dateKey] = 0;
         const diningBonus = Math.floor(txn.amount / 150) * 5;
-        const allowedBonus = Math.min(
-          diningBonus,
-          CAPS.DINING_DAILY - mState.dailyDining[dateKey]
-        );
+        const allowedBonus = Math.min(diningBonus, CAPS.DINING_DAILY - mState.dailyDining[dateKey]);
         mState.dailyDining[dateKey] += allowedBonus;
         earnedRP = baseRP + allowedBonus;
         if (allowedBonus < diningBonus) note = "Daily Dining Cap Reached";
@@ -517,53 +281,26 @@ export default function App() {
       }
 
       mState.totalEarnedRP += earnedRP;
-      lifetimeEarnedRP[txn.cardHolder] =
-        (lifetimeEarnedRP[txn.cardHolder] || 0) + earnedRP;
+      lifetimeEarnedRP[txn.cardHolder] = (lifetimeEarnedRP[txn.cardHolder] || 0) + earnedRP;
 
-      processedTxns.push({
-        ...txn,
-        earnedRP,
-        note,
-        fee,
-        feeNote,
-        categoryLabel: category.label,
-      });
+      processedTxns.push({ ...txn, earnedRP, note, fee, feeNote, categoryLabel: category.label });
     });
 
-    return {
-      processedTxns: processedTxns.reverse(),
-      monthlyState,
-      lifetimeEarnedRP,
-    };
+    return { processedTxns: processedTxns.reverse(), monthlyState, lifetimeEarnedRP };
   }, [transactions]);
 
   const rewardsBalance = useMemo(() => {
     const balances = {};
-    cardholders.forEach(
-      (h) =>
-        (balances[h] = {
-          earned: processedData.lifetimeEarnedRP[h] || 0,
-          adjustments: 0,
-          redemptions: 0,
-        })
-    );
+    cardholders.forEach(h => balances[h] = { earned: processedData.lifetimeEarnedRP[h] || 0, adjustments: 0, redemptions: 0 });
 
-    rewardsLog.forEach((log) => {
-      if (!balances[log.cardHolder])
-        balances[log.cardHolder] = {
-          earned: 0,
-          adjustments: 0,
-          redemptions: 0,
-        };
-      if (log.type === "adjustment")
-        balances[log.cardHolder].adjustments += Number(log.points);
-      if (log.type === "redemption")
-        balances[log.cardHolder].redemptions += Number(log.points);
+    rewardsLog.forEach(log => {
+      if (!balances[log.cardHolder]) balances[log.cardHolder] = { earned: 0, adjustments: 0, redemptions: 0 };
+      if (log.type === 'adjustment') balances[log.cardHolder].adjustments += Number(log.points);
+      if (log.type === 'redemption') balances[log.cardHolder].redemptions += Number(log.points);
     });
 
-    Object.keys(balances).forEach((h) => {
-      balances[h].available =
-        balances[h].earned + balances[h].adjustments - balances[h].redemptions;
+    Object.keys(balances).forEach(h => {
+      balances[h].available = balances[h].earned + balances[h].adjustments - balances[h].redemptions;
     });
 
     return balances;
@@ -575,82 +312,45 @@ export default function App() {
     const quarter = Math.ceil(selMonth / 3);
     const startMonth = (quarter - 1) * 3 + 1;
     let quarterSpend = 0;
-    [
-      `${selYear}-${String(startMonth).padStart(2, "0")}`,
-      `${selYear}-${String(startMonth + 1).padStart(2, "0")}`,
-      `${selYear}-${String(startMonth + 2).padStart(2, "0")}`,
-    ].forEach((m) => {
+    [`${selYear}-${String(startMonth).padStart(2, "0")}`, `${selYear}-${String(startMonth + 1).padStart(2, "0")}`, `${selYear}-${String(startMonth + 2).padStart(2, "0")}`].forEach((m) => {
       if (processedData.monthlyState[m]) {
-        quarterSpend +=
-          filterHolder === "All"
-            ? processedData.monthlyState[m].totalSpend
-            : processedData.monthlyState[m].cardholderSpends[filterHolder] || 0;
+        quarterSpend += filterHolder === "All" ? processedData.monthlyState[m].totalSpend : (processedData.monthlyState[m].cardholderSpends[filterHolder] || 0);
       }
     });
-    return {
-      spend: quarterSpend,
-      target: CAPS.QUARTERLY_MILESTONE,
-      progress: Math.min((quarterSpend / CAPS.QUARTERLY_MILESTONE) * 100, 100),
-      label: `Q${quarter} ${selYear}`,
-    };
+    return { spend: quarterSpend, target: CAPS.QUARTERLY_MILESTONE, progress: Math.min((quarterSpend / CAPS.QUARTERLY_MILESTONE) * 100, 100), label: `Q${quarter} ${selYear}` };
   }, [selMonth, selYear, filterHolder, processedData.monthlyState]);
 
   const annualStats = useMemo(() => {
     let startYear = selYear;
     if (selMonth < 6) startYear -= 1;
-    let annualSpend = 0,
-      annualRP = 0;
+    let annualSpend = 0, annualRP = 0;
     for (let m = 0; m < 12; m++) {
-      let checkMonth = 6 + m,
-        checkYear = startYear;
-      if (checkMonth > 12) {
-        checkMonth -= 12;
-        checkYear += 1;
-      }
+      let checkMonth = 6 + m, checkYear = startYear;
+      if (checkMonth > 12) { checkMonth -= 12; checkYear += 1; }
       const mKey = `${checkYear}-${String(checkMonth).padStart(2, "0")}`;
       if (processedData.monthlyState[mKey]) {
         if (filterHolder === "All") {
           annualSpend += processedData.monthlyState[mKey].totalSpend;
           annualRP += processedData.monthlyState[mKey].totalEarnedRP;
         } else {
-          annualSpend +=
-            processedData.monthlyState[mKey].cardholderSpends[filterHolder] ||
-            0;
+          annualSpend += processedData.monthlyState[mKey].cardholderSpends[filterHolder] || 0;
           annualRP += processedData.monthlyState[mKey].totalEarnedRP;
         }
       }
     }
-    return {
-      spend: annualSpend,
-      earnedRP: annualRP,
-      target: CAPS.ANNUAL_MILESTONE,
-      progress: Math.min((annualSpend / CAPS.ANNUAL_MILESTONE) * 100, 100),
-      label: `Anniversary (Jun ${startYear} - May ${startYear + 1})`,
-    };
+    return { spend: annualSpend, earnedRP: annualRP, target: CAPS.ANNUAL_MILESTONE, progress: Math.min((annualSpend / CAPS.ANNUAL_MILESTONE) * 100, 100), label: `Anniversary (Jun ${startYear} - May ${startYear + 1})` };
   }, [selMonth, selYear, filterHolder, processedData.monthlyState]);
 
   const currentStats = processedData.monthlyState[monthKey] || {
-    groceryMonthlyRewardCap: 0,
-    utilityMonthlyRewardCap: 0,
-    telecomMonthlyRewardCap: 0,
-    insuranceMonthlyRewardCap: 0,
-    smartBuyBonusRP: 0,
-    totalSpend: 0,
-    totalEarnedRP: 0,
-    totalFees: 0,
-    feeBreakdown: { rent: 0, utility: 0, fuel: 0, education: 0 },
-    cardholderSpends: {},
+    groceryMonthlyRewardCap: 0, utilityMonthlyRewardCap: 0, telecomMonthlyRewardCap: 0, insuranceMonthlyRewardCap: 0,
+    smartBuyBonusRP: 0, totalSpend: 0, totalEarnedRP: 0, totalFees: 0, feeBreakdown: { rent: 0, utility: 0, fuel: 0, education: 0 }, cardholderSpends: {},
   };
 
   const handleAddTransaction = async (e) => {
     e.preventDefault();
     if (!newTxn.amount || isNaN(newTxn.amount) || newTxn.amount <= 0) return;
-    const txnData = {
-      ...newTxn,
-      amount: Number(newTxn.amount),
-      updatedAt: new Date().toISOString(),
-    };
-
+    const txnData = { ...newTxn, amount: Number(newTxn.amount), updatedAt: new Date().toISOString() };
+    
     if (isEditing) {
       await updateDoc(doc(db, "family_transactions", editTxnId), txnData);
     } else {
@@ -672,6 +372,7 @@ export default function App() {
     });
     setEditTxnId(txn.id);
     setIsEditing(true);
+    setRefundInput("");
     setShowAddModal(true);
   };
 
@@ -683,13 +384,8 @@ export default function App() {
 
   const handleAddReward = async (e) => {
     e.preventDefault();
-    if (!newReward.points || isNaN(newReward.points) || newReward.points <= 0)
-      return;
-    const rewardData = {
-      ...newReward,
-      points: Number(newReward.points),
-      createdAt: new Date().toISOString(),
-    };
+    if (!newReward.points || isNaN(newReward.points) || newReward.points <= 0) return;
+    const rewardData = { ...newReward, points: Number(newReward.points), createdAt: new Date().toISOString() };
     await addDoc(collection(db, "family_rewards"), rewardData);
     setShowRewardModal(false);
     setNewReward({ ...newReward, points: "", remarks: "" });
@@ -704,32 +400,19 @@ export default function App() {
   const handleSaveSettings = async () => {
     const changedNames = [];
     cardholders.forEach((oldName, i) => {
-      if (oldName !== editHolders[i])
-        changedNames.push({ old: oldName, new: editHolders[i] });
+      if (oldName !== editHolders[i]) changedNames.push({ old: oldName, new: editHolders[i] });
     });
 
-    await setDoc(
-      doc(db, "family_settings", "profile"),
-      { cardholders: editHolders },
-      { merge: true }
-    );
+    await setDoc(doc(db, "family_settings", "profile"), { cardholders: editHolders }, { merge: true });
 
     for (const change of changedNames) {
-      const matchingTxns = transactions.filter(
-        (t) => t.cardHolder === change.old
-      );
+      const matchingTxns = transactions.filter((t) => t.cardHolder === change.old);
       for (const t of matchingTxns) {
-        await updateDoc(doc(db, "family_transactions", t.id), {
-          cardHolder: change.new,
-        });
+        await updateDoc(doc(db, "family_transactions", t.id), { cardHolder: change.new });
       }
-      const matchingRewards = rewardsLog.filter(
-        (r) => r.cardHolder === change.old
-      );
+      const matchingRewards = rewardsLog.filter((r) => r.cardHolder === change.old);
       for (const r of matchingRewards) {
-        await updateDoc(doc(db, "family_rewards", r.id), {
-          cardHolder: change.new,
-        });
+        await updateDoc(doc(db, "family_rewards", r.id), { cardHolder: change.new });
       }
     }
     setShowSettingsModal(false);
@@ -738,260 +421,96 @@ export default function App() {
   if (!user) {
     return (
       <div className="flex h-screen items-center justify-center bg-zinc-900 font-sans p-4 relative overflow-hidden">
-        <div
-          className="absolute inset-0 opacity-10 pointer-events-none"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at center, #a1a1aa 1px, transparent 1px)",
-            backgroundSize: "24px 24px",
-          }}
-        ></div>
+        <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at center, #a1a1aa 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
         <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm text-center relative z-10">
           <div className="bg-amber-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-600">
             <Lock size={32} />
           </div>
-          <h2 className="text-2xl font-bold text-zinc-900 mb-2">
-            HDFC Diners Black Metal Spends Tracker
-          </h2>
-          <p className="text-zinc-500 text-sm mb-6">
-            Enter your email and password to access the tracker.
-          </p>
+          <h2 className="text-2xl font-bold text-zinc-900 mb-2">HDFC Diners Black Metal Spends Tracker</h2>
+          <p className="text-zinc-500 text-sm mb-6">Enter your email and password to access the tracker.</p>
           <form onSubmit={handleLogin} className="space-y-4">
-            <input
-              type="email"
-              value={emailInput}
-              onChange={(e) => setEmailInput(e.target.value)}
-              placeholder="Email ID"
-              className="w-full text-center text-lg font-medium border border-zinc-200 rounded-xl p-4 focus:ring-2 focus:ring-amber-500 outline-none bg-zinc-50"
-              autoFocus
-            />
-            <input
-              type="password"
-              value={passwordInput}
-              onChange={(e) => setPasswordInput(e.target.value)}
-              placeholder="Password"
-              className="w-full text-center text-lg font-medium border border-zinc-200 rounded-xl p-4 focus:ring-2 focus:ring-amber-500 outline-none bg-zinc-50"
-            />
-            {authError && (
-              <p className="text-red-500 text-sm font-medium">{authError}</p>
-            )}
-            <button
-              type="submit"
-              className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 rounded-xl shadow-sm transition-colors"
-            >
-              Secure Login
-            </button>
+            <input type="email" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} placeholder="Email ID" className="w-full text-center text-lg font-medium border border-zinc-200 rounded-xl p-4 focus:ring-2 focus:ring-amber-500 outline-none bg-zinc-50" autoFocus />
+            <input type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} placeholder="Password" className="w-full text-center text-lg font-medium border border-zinc-200 rounded-xl p-4 focus:ring-2 focus:ring-amber-500 outline-none bg-zinc-50" />
+            {authError && <p className="text-red-500 text-sm font-medium">{authError}</p>}
+            <button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 rounded-xl shadow-sm transition-colors">Secure Login</button>
           </form>
         </div>
         <div className="mt-8 text-zinc-500 text-xs font-medium relative z-10 flex items-center gap-2">
-          <ShieldAlert size={14} /> Contact Rohit Chopra for any issues or
-          access requirement
+          <ShieldAlert size={14} /> Contact Rohit Chopra for any issues or access requirement
         </div>
       </div>
     );
   }
 
-  const filteredTxns = processedData.processedTxns.filter(
-    (t) =>
-      t.date.startsWith(monthKey) &&
-      (filterHolder === "All" || t.cardHolder === filterHolder)
-  );
-  const displayTotalSpend =
-    filterHolder === "All"
-      ? currentStats.totalSpend
-      : currentStats.cardholderSpends[filterHolder] || 0;
-  const isPolicyUpdateDue =
-    (new Date().getFullYear() - 2026) * 12 + (new Date().getMonth() - 5) >= 6;
+  const filteredTxns = processedData.processedTxns.filter((t) => t.date.startsWith(monthKey) && (filterHolder === "All" || t.cardHolder === filterHolder));
+  const displayTotalSpend = filterHolder === "All" ? currentStats.totalSpend : (currentStats.cardholderSpends[filterHolder] || 0);
+  const isPolicyUpdateDue = (new Date().getFullYear() - 2026) * 12 + (new Date().getMonth() - 5) >= 6;
 
-  if (loading)
-    return (
-      <div className="flex h-screen items-center justify-center bg-zinc-50">
-        <div className="animate-pulse text-zinc-500 font-medium">
-          Loading Diners Club Data...
-        </div>
-      </div>
-    );
+  if (loading) return <div className="flex h-screen items-center justify-center bg-zinc-50"><div className="animate-pulse text-zinc-500 font-medium">Loading Diners Club Data...</div></div>;
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-zinc-100 font-sans text-zinc-800">
+      
       {/* Desktop Sidebar (Hidden on Mobile) */}
       <aside className="hidden md:flex w-64 bg-zinc-900 text-zinc-100 flex-col transition-all">
         <div className="p-6">
           <div className="flex items-center gap-3 text-amber-500 mb-2">
             <CreditCard size={28} />
-            <h1 className="text-xl font-bold tracking-wider uppercase text-zinc-100">
-              DCB Metal
-            </h1>
+            <h1 className="text-xl font-bold tracking-wider uppercase text-zinc-100">DCB Metal</h1>
           </div>
-          <p className="text-xs text-zinc-400 font-medium tracking-wide">
-            REWARDS TRACKER
-          </p>
+          <p className="text-xs text-zinc-400 font-medium tracking-wide">REWARDS TRACKER</p>
         </div>
         <nav className="flex-1 px-4 space-y-2 mt-4">
-          <button
-            onClick={() => setActiveTab("dashboard")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-              activeTab === "dashboard"
-                ? "bg-amber-500/10 text-amber-500"
-                : "hover:bg-zinc-800 text-zinc-400"
-            }`}
-          >
-            <LayoutDashboard size={20} />{" "}
-            <span className="font-medium">Dashboard</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("logs")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-              activeTab === "logs"
-                ? "bg-amber-500/10 text-amber-500"
-                : "hover:bg-zinc-800 text-zinc-400"
-            }`}
-          >
-            <List size={20} /> <span className="font-medium">Transactions</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("rewards")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-              activeTab === "rewards"
-                ? "bg-amber-500/10 text-amber-500"
-                : "hover:bg-zinc-800 text-zinc-400"
-            }`}
-          >
-            <Gift size={20} />{" "}
-            <span className="font-medium">Rewards Ledger</span>
-          </button>
+          <button onClick={() => setActiveTab("dashboard")} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "dashboard" ? "bg-amber-500/10 text-amber-500" : "hover:bg-zinc-800 text-zinc-400"}`}><LayoutDashboard size={20} /> <span className="font-medium">Dashboard</span></button>
+          <button onClick={() => setActiveTab("logs")} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "logs" ? "bg-amber-500/10 text-amber-500" : "hover:bg-zinc-800 text-zinc-400"}`}><List size={20} /> <span className="font-medium">Transactions</span></button>
+          <button onClick={() => setActiveTab("rewards")} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "rewards" ? "bg-amber-500/10 text-amber-500" : "hover:bg-zinc-800 text-zinc-400"}`}><Gift size={20} /> <span className="font-medium">Rewards Ledger</span></button>
         </nav>
         <div className="p-4 space-y-2">
-          <button
-            onClick={() => setShowPolicyModal(true)}
-            className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-zinc-400 hover:bg-zinc-800 transition-colors text-sm"
-          >
-            <div className="flex items-center gap-3">
-              <BookOpen size={18} />{" "}
-              <span className="font-medium">HDFC Policies</span>
-            </div>
-            {isPolicyUpdateDue && (
-              <ShieldAlert size={16} className="text-amber-500" />
-            )}
+          <button onClick={() => setShowPolicyModal(true)} className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-zinc-400 hover:bg-zinc-800 transition-colors text-sm">
+            <div className="flex items-center gap-3"><BookOpen size={18} /> <span className="font-medium">HDFC Policies</span></div>
+            {isPolicyUpdateDue && <ShieldAlert size={16} className="text-amber-500" />}
           </button>
-          <button
-            onClick={() => setShowSettingsModal(true)}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:bg-zinc-800 transition-colors"
-          >
-            <Settings size={20} /> <span className="font-medium">Settings</span>
-          </button>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-500 hover:bg-zinc-800 transition-colors text-xs text-left mt-4 border border-zinc-800"
-          >
-            <Lock size={14} /> Logout
-          </button>
+          <button onClick={() => setShowSettingsModal(true)} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:bg-zinc-800 transition-colors"><Settings size={20} /> <span className="font-medium">Settings</span></button>
+          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-500 hover:bg-zinc-800 transition-colors text-xs text-left mt-4 border border-zinc-800"><Lock size={14} /> Logout</button>
         </div>
       </aside>
 
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 w-full bg-zinc-900 border-t border-zinc-800 z-40 flex justify-around p-3 pb-safe shadow-2xl">
-        <button
-          onClick={() => setActiveTab("dashboard")}
-          className={`flex flex-col items-center gap-1 ${
-            activeTab === "dashboard" ? "text-amber-500" : "text-zinc-500"
-          }`}
-        >
-          <LayoutDashboard size={20} />
-          <span className="text-[10px] font-medium">Dashboard</span>
-        </button>
-        <button
-          onClick={() => setActiveTab("logs")}
-          className={`flex flex-col items-center gap-1 ${
-            activeTab === "logs" ? "text-amber-500" : "text-zinc-500"
-          }`}
-        >
-          <List size={20} />
-          <span className="text-[10px] font-medium">Transactions</span>
-        </button>
-        <button
-          onClick={() => setActiveTab("rewards")}
-          className={`flex flex-col items-center gap-1 ${
-            activeTab === "rewards" ? "text-amber-500" : "text-zinc-500"
-          }`}
-        >
-          <Gift size={20} />
-          <span className="text-[10px] font-medium">Rewards</span>
-        </button>
-        <button
-          onClick={() => setShowSettingsModal(true)}
-          className="flex flex-col items-center gap-1 text-zinc-500"
-        >
-          <Settings size={20} />
-          <span className="text-[10px] font-medium">Settings</span>
-        </button>
+        <button onClick={() => setActiveTab("dashboard")} className={`flex flex-col items-center gap-1 ${activeTab === "dashboard" ? "text-amber-500" : "text-zinc-500"}`}><LayoutDashboard size={20} /><span className="text-[10px] font-medium">Dashboard</span></button>
+        <button onClick={() => setActiveTab("logs")} className={`flex flex-col items-center gap-1 ${activeTab === "logs" ? "text-amber-500" : "text-zinc-500"}`}><List size={20} /><span className="text-[10px] font-medium">Transactions</span></button>
+        <button onClick={() => setActiveTab("rewards")} className={`flex flex-col items-center gap-1 ${activeTab === "rewards" ? "text-amber-500" : "text-zinc-500"}`}><Gift size={20} /><span className="text-[10px] font-medium">Rewards</span></button>
+        <button onClick={() => setShowSettingsModal(true)} className="flex flex-col items-center gap-1 text-zinc-500"><Settings size={20} /><span className="text-[10px] font-medium">Settings</span></button>
       </nav>
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto pb-24 md:pb-0">
         <div className="p-4 md:p-8 max-w-6xl mx-auto">
+          
           <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
-              <h2 className="text-2xl font-bold text-zinc-900">
-                {filterHolder === "All" ? "Family" : filterHolder} Overview
-              </h2>
-              <p className="text-zinc-500 text-sm mt-1">
-                Track family spends and maximize returns.
-              </p>
+              <h2 className="text-2xl font-bold text-zinc-900">{filterHolder === "All" ? "Family" : filterHolder} Overview</h2>
+              <p className="text-zinc-500 text-sm mt-1">Track family spends and maximize returns.</p>
             </div>
             <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
               <div className="bg-white border border-zinc-200 px-3 py-2 rounded-xl flex items-center gap-2 shadow-sm relative flex-1 md:flex-none">
                 <Filter size={16} className="text-amber-500" />
-                <select
-                  value={filterHolder}
-                  onChange={(e) => setFilterHolder(e.target.value)}
-                  className="bg-transparent border-none focus:outline-none text-zinc-800 text-sm font-medium pr-4 appearance-none w-full cursor-pointer"
-                >
+                <select value={filterHolder} onChange={(e) => setFilterHolder(e.target.value)} className="bg-transparent border-none focus:outline-none text-zinc-800 text-sm font-medium pr-4 appearance-none w-full cursor-pointer">
                   <option value="All">All Family Spends</option>
-                  {cardholders.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
+                  {cardholders.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
-                <ChevronDown
-                  className="absolute right-2 top-2.5 text-zinc-400 pointer-events-none"
-                  size={14}
-                />
+                <ChevronDown className="absolute right-2 top-2.5 text-zinc-400 pointer-events-none" size={14} />
               </div>
               <div className="bg-white border border-zinc-200 px-3 py-2 rounded-xl flex items-center gap-1 shadow-sm flex-1 md:flex-none justify-center">
-                <select
-                  value={selMonth}
-                  onChange={(e) => setSelMonth(Number(e.target.value))}
-                  className="bg-transparent text-sm font-bold text-zinc-800 outline-none appearance-none cursor-pointer"
-                >
-                  {MONTHS.map((m, i) => (
-                    <option key={m} value={i + 1}>
-                      {m}
-                    </option>
-                  ))}
+                <select value={selMonth} onChange={(e) => setSelMonth(Number(e.target.value))} className="bg-transparent text-sm font-bold text-zinc-800 outline-none appearance-none cursor-pointer">
+                  {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
                 </select>
                 <span className="text-zinc-300">/</span>
-                <select
-                  value={selYear}
-                  onChange={(e) => setSelYear(Number(e.target.value))}
-                  className="bg-transparent text-sm font-bold text-zinc-800 outline-none appearance-none cursor-pointer"
-                >
-                  {[2024, 2025, 2026, 2027, 2028].map((y) => (
-                    <option key={y} value={y}>
-                      {y}
-                    </option>
-                  ))}
+                <select value={selYear} onChange={(e) => setSelYear(Number(e.target.value))} className="bg-transparent text-sm font-bold text-zinc-800 outline-none appearance-none cursor-pointer">
+                  {[2024, 2025, 2026, 2027, 2028].map((y) => <option key={y} value={y}>{y}</option>)}
                 </select>
               </div>
-              <button
-                onClick={() => {
-                  setIsEditing(false);
-                  setNewTxn(initialTxnState);
-                  setShowAddModal(true);
-                }}
-                className="bg-zinc-900 hover:bg-zinc-800 text-white px-4 py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 shadow-sm text-sm w-full md:w-auto"
-              >
+              <button onClick={() => { setIsEditing(false); setNewTxn(initialTxnState); setShowAddModal(true); }} className="bg-zinc-900 hover:bg-zinc-800 text-white px-4 py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 shadow-sm text-sm w-full md:w-auto">
                 <Plus size={16} /> Add Spend
               </button>
             </div>
@@ -999,40 +518,21 @@ export default function App() {
 
           {activeTab === "dashboard" && (
             <div className="space-y-6">
+              
               <div className="bg-white p-4 md:p-6 rounded-2xl border border-zinc-200 shadow-sm">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                  <h3 className="text-lg font-bold text-zinc-900">
-                    Total Spend ({MONTHS[selMonth - 1]} {selYear})
-                  </h3>
+                  <h3 className="text-lg font-bold text-zinc-900">Total Spend ({MONTHS[selMonth - 1]} {selYear})</h3>
                   <div className="text-left md:text-right">
-                    <div className="text-2xl md:text-3xl font-black text-zinc-800">
-                      ₹ {displayTotalSpend.toLocaleString("en-IN")}
-                    </div>
-                    <div className="text-sm font-bold text-green-600">
-                      +
-                      {filterHolder === "All"
-                        ? currentStats.totalEarnedRP.toLocaleString("en-IN")
-                        : "Family Calc"}{" "}
-                      RP Earned This Month
-                    </div>
+                    <div className="text-2xl md:text-3xl font-black text-zinc-800">₹ {displayTotalSpend.toLocaleString("en-IN")}</div>
+                    <div className="text-sm font-bold text-green-600">+{filterHolder === "All" ? currentStats.totalEarnedRP.toLocaleString("en-IN") : "Family Calc"} RP Earned This Month</div>
                   </div>
                 </div>
                 {filterHolder === "All" && (
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-3 pt-4 border-t border-zinc-100">
                     {cardholders.map((holder) => (
-                      <div
-                        key={holder}
-                        className="bg-zinc-50 p-3 rounded-xl border border-zinc-100"
-                      >
-                        <div className="text-xs text-zinc-500 font-medium mb-1 truncate">
-                          {holder}
-                        </div>
-                        <div className="text-base font-bold text-zinc-800">
-                          ₹{" "}
-                          {(
-                            currentStats.cardholderSpends[holder] || 0
-                          ).toLocaleString("en-IN")}
-                        </div>
+                      <div key={holder} className="bg-zinc-50 p-3 rounded-xl border border-zinc-100">
+                        <div className="text-xs text-zinc-500 font-medium mb-1 truncate">{holder}</div>
+                        <div className="text-base font-bold text-zinc-800">₹ {(currentStats.cardholderSpends[holder] || 0).toLocaleString("en-IN")}</div>
                       </div>
                     ))}
                   </div>
@@ -1043,99 +543,33 @@ export default function App() {
                 <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm flex flex-col justify-center">
                   <div className="text-zinc-500 text-sm font-medium mb-2 flex justify-between items-center">
                     <span>{annualStats.label}</span>
-                    <span
-                      className={`text-[10px] font-bold px-2 py-1 rounded-md ${
-                        annualStats.progress >= 100
-                          ? "text-green-700 bg-green-100"
-                          : "text-emerald-700 bg-emerald-50"
-                      }`}
-                    >
-                      Fee Waiver
-                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${annualStats.progress >= 100 ? "text-green-700 bg-green-100" : "text-emerald-700 bg-emerald-50"}`}>Fee Waiver</span>
                   </div>
-                  <div className="text-2xl font-bold text-zinc-900 mb-3">
-                    ₹ {annualStats.spend.toLocaleString("en-IN")}
-                    <span className="text-xs font-normal text-zinc-400 ml-1">
-                      / 8L
-                    </span>
-                  </div>
-                  <div className="w-full bg-zinc-100 rounded-full h-2 relative">
-                    <div
-                      className={`${
-                        annualStats.progress >= 100
-                          ? "bg-green-500"
-                          : "bg-amber-500"
-                      } h-2 rounded-full transition-all`}
-                      style={{ width: `${annualStats.progress}%` }}
-                    ></div>
-                  </div>
+                  <div className="text-2xl font-bold text-zinc-900 mb-3">₹ {annualStats.spend.toLocaleString("en-IN")}<span className="text-xs font-normal text-zinc-400 ml-1">/ 8L</span></div>
+                  <div className="w-full bg-zinc-100 rounded-full h-2 relative"><div className={`${annualStats.progress >= 100 ? "bg-green-500" : "bg-amber-500"} h-2 rounded-full transition-all`} style={{ width: `${annualStats.progress}%` }}></div></div>
                 </div>
 
                 <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm flex flex-col justify-center relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-4 opacity-10">
-                    <TrendingUp size={64} />
-                  </div>
+                  <div className="absolute top-0 right-0 p-4 opacity-10"><TrendingUp size={64} /></div>
                   <div className="text-zinc-500 text-sm font-medium mb-2 flex justify-between items-center relative z-10">
                     <span>{quarterStats.label} Milestone</span>
-                    <span
-                      className={`text-[10px] font-bold px-2 py-1 rounded-md ${
-                        quarterStats.progress >= 100
-                          ? "text-green-700 bg-green-100"
-                          : "text-amber-700 bg-amber-50"
-                      }`}
-                    >
-                      10K RP
-                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${quarterStats.progress >= 100 ? "text-green-700 bg-green-100" : "text-amber-700 bg-amber-50"}`}>10K RP</span>
                   </div>
-                  <div className="text-2xl font-bold text-zinc-900 relative z-10 mb-3">
-                    ₹ {quarterStats.spend.toLocaleString("en-IN")}
-                    <span className="text-xs font-normal text-zinc-400 ml-1">
-                      / 4L
-                    </span>
-                  </div>
-                  <div className="w-full bg-zinc-100 rounded-full h-2 relative z-10">
-                    <div
-                      className={`${
-                        quarterStats.progress >= 100
-                          ? "bg-green-500"
-                          : "bg-amber-500"
-                      } h-2 rounded-full transition-all`}
-                      style={{ width: `${quarterStats.progress}%` }}
-                    ></div>
-                  </div>
+                  <div className="text-2xl font-bold text-zinc-900 relative z-10 mb-3">₹ {quarterStats.spend.toLocaleString("en-IN")}<span className="text-xs font-normal text-zinc-400 ml-1">/ 4L</span></div>
+                  <div className="w-full bg-zinc-100 rounded-full h-2 relative z-10"><div className={`${quarterStats.progress >= 100 ? "bg-green-500" : "bg-amber-500"} h-2 rounded-full transition-all`} style={{ width: `${quarterStats.progress}%` }}></div></div>
                 </div>
 
                 {filterHolder === "All" ? (
                   <div className="bg-gradient-to-br from-zinc-800 to-zinc-900 p-6 rounded-2xl shadow-sm text-white flex flex-col justify-center">
-                    <div className="font-medium mb-1 text-sm flex items-center gap-2 opacity-90">
-                      <Award size={16} /> Annual RP Earned
-                    </div>
-                    <div className="text-3xl font-bold text-amber-500">
-                      {annualStats.earnedRP.toLocaleString("en-IN")}
-                      <span className="text-sm opacity-80 font-medium ml-1 text-white">
-                        RP
-                      </span>
-                    </div>
-                    <div className="text-[10px] text-zinc-400 mt-2 font-medium">
-                      Cycle: Jun 2026 - May 2027
-                    </div>
+                    <div className="font-medium mb-1 text-sm flex items-center gap-2 opacity-90"><Award size={16} /> Annual RP Earned</div>
+                    <div className="text-3xl font-bold text-amber-500">{annualStats.earnedRP.toLocaleString("en-IN")}<span className="text-sm opacity-80 font-medium ml-1 text-white">RP</span></div>
+                    <div className="text-[10px] text-zinc-400 mt-2 font-medium">Cycle: Jun 2026 - May 2027</div>
                   </div>
                 ) : (
                   <div className="bg-gradient-to-br from-amber-500 to-orange-500 p-6 rounded-2xl shadow-sm text-white flex flex-col justify-center">
-                    <div className="font-medium mb-1 text-sm flex items-center gap-2 opacity-90">
-                      <Gift size={16} /> Available Reward Points
-                    </div>
-                    <div className="text-3xl font-bold text-white">
-                      {(
-                        rewardsBalance[filterHolder]?.available || 0
-                      ).toLocaleString("en-IN")}
-                      <span className="text-sm opacity-80 font-medium ml-1 text-white">
-                        RP
-                      </span>
-                    </div>
-                    <div className="text-[10px] text-amber-100 mt-2 font-medium">
-                      Includes manual adjustments
-                    </div>
+                    <div className="font-medium mb-1 text-sm flex items-center gap-2 opacity-90"><Gift size={16} /> Available Reward Points</div>
+                    <div className="text-3xl font-bold text-white">{(rewardsBalance[filterHolder]?.available || 0).toLocaleString("en-IN")}<span className="text-sm opacity-80 font-medium ml-1 text-white">RP</span></div>
+                    <div className="text-[10px] text-amber-100 mt-2 font-medium">Includes manual adjustments</div>
                   </div>
                 )}
               </div>
@@ -1143,251 +577,57 @@ export default function App() {
               {/* HDFC Bank Fees Tracker Card */}
               <div className="bg-white p-4 md:p-6 rounded-2xl border border-zinc-200 shadow-sm">
                 <h3 className="text-base md:text-lg font-bold text-zinc-900 mb-6 flex items-center gap-2">
-                  <AlertCircle className="text-red-500" size={18} /> Bank
-                  Surcharges & Fees (1%)
-                  <span className="text-[10px] font-normal text-zinc-500 ml-1 hidden md:inline">
-                    (Capped at ₹3,000 per txn)
-                  </span>
+                  <AlertCircle className="text-red-500" size={18} /> Bank Surcharges & Fees (1%)
+                  <span className="text-[10px] font-normal text-zinc-500 ml-1 hidden md:inline">(Capped at ₹3,000 per txn)</span>
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <div className="bg-red-50 p-4 rounded-xl border border-red-100 col-span-2 md:col-span-1">
-                    <div className="text-xs text-red-600 font-bold mb-1 uppercase tracking-wider">
-                      Total Fees
-                    </div>
-                    <div className="text-xl font-black text-red-700">
-                      ₹ {currentStats.totalFees.toLocaleString("en-IN")}
-                    </div>
+                    <div className="text-xs text-red-600 font-bold mb-1 uppercase tracking-wider">Total Fees</div>
+                    <div className="text-xl font-black text-red-700">₹ {currentStats.totalFees.toLocaleString("en-IN")}</div>
                   </div>
                   <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-100">
-                    <div className="text-xs text-zinc-500 font-medium mb-1">
-                      Rental Fees
-                    </div>
-                    <div className="text-lg font-bold text-zinc-800">
-                      ₹{" "}
-                      {(currentStats.feeBreakdown?.rent || 0).toLocaleString(
-                        "en-IN"
-                      )}
-                    </div>
+                    <div className="text-xs text-zinc-500 font-medium mb-1">Rental Fees</div>
+                    <div className="text-lg font-bold text-zinc-800">₹ {(currentStats.feeBreakdown?.rent || 0).toLocaleString("en-IN")}</div>
                   </div>
                   <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-100">
-                    <div className="text-xs text-zinc-500 font-medium mb-1">
-                      Utility (&gt;50k)
-                    </div>
-                    <div className="text-lg font-bold text-zinc-800">
-                      ₹{" "}
-                      {(currentStats.feeBreakdown?.utility || 0).toLocaleString(
-                        "en-IN"
-                      )}
-                    </div>
+                    <div className="text-xs text-zinc-500 font-medium mb-1">Utility (&gt;50k)</div>
+                    <div className="text-lg font-bold text-zinc-800">₹ {(currentStats.feeBreakdown?.utility || 0).toLocaleString("en-IN")}</div>
                   </div>
                   <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-100">
-                    <div className="text-xs text-zinc-500 font-medium mb-1">
-                      Fuel (&gt;15k)
-                    </div>
-                    <div className="text-lg font-bold text-zinc-800">
-                      ₹{" "}
-                      {(currentStats.feeBreakdown?.fuel || 0).toLocaleString(
-                        "en-IN"
-                      )}
-                    </div>
+                    <div className="text-xs text-zinc-500 font-medium mb-1">Fuel (&gt;15k)</div>
+                    <div className="text-lg font-bold text-zinc-800">₹ {(currentStats.feeBreakdown?.fuel || 0).toLocaleString("en-IN")}</div>
                   </div>
                   <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-100">
-                    <div className="text-xs text-zinc-500 font-medium mb-1">
-                      Education
-                    </div>
-                    <div className="text-lg font-bold text-zinc-800">
-                      ₹{" "}
-                      {(
-                        currentStats.feeBreakdown?.education || 0
-                      ).toLocaleString("en-IN")}
-                    </div>
+                    <div className="text-xs text-zinc-500 font-medium mb-1">Education</div>
+                    <div className="text-lg font-bold text-zinc-800">₹ {(currentStats.feeBreakdown?.education || 0).toLocaleString("en-IN")}</div>
                   </div>
                 </div>
               </div>
 
               <div className="bg-white p-4 md:p-6 rounded-2xl border border-zinc-200 shadow-sm">
                 <h3 className="text-base md:text-lg font-bold text-zinc-900 mb-6 flex items-center gap-2">
-                  <CheckCircle2 className="text-green-500" size={18} /> Family
-                  Monthly Capping Status
+                  <CheckCircle2 className="text-green-500" size={18} /> Family Monthly Capping Status
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-6">
                   <div>
-                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium">
-                      <span className="text-zinc-700">SmartBuy Bonus</span>
-                      <span
-                        className={
-                          currentStats.smartBuyBonusRP >=
-                          CAPS.SMARTBUY_BONUS_MONTHLY
-                            ? "text-red-500"
-                            : "text-zinc-500"
-                        }
-                      >
-                        {currentStats.smartBuyBonusRP.toLocaleString("en-IN")} /
-                        10,000
-                      </span>
-                    </div>
-                    <div className="w-full bg-zinc-100 rounded-full h-1.5">
-                      <div
-                        className={`h-1.5 rounded-full ${
-                          currentStats.smartBuyBonusRP >=
-                          CAPS.SMARTBUY_BONUS_MONTHLY
-                            ? "bg-red-500"
-                            : "bg-blue-500"
-                        }`}
-                        style={{
-                          width: `${Math.min(
-                            (currentStats.smartBuyBonusRP /
-                              CAPS.SMARTBUY_BONUS_MONTHLY) *
-                              100,
-                            100
-                          )}%`,
-                        }}
-                      ></div>
-                    </div>
+                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium"><span className="text-zinc-700">SmartBuy Bonus</span><span className={currentStats.smartBuyBonusRP >= CAPS.SMARTBUY_BONUS_MONTHLY ? "text-red-500" : "text-zinc-500"}>{currentStats.smartBuyBonusRP.toLocaleString("en-IN")} / 10,000</span></div>
+                    <div className="w-full bg-zinc-100 rounded-full h-1.5"><div className={`h-1.5 rounded-full ${currentStats.smartBuyBonusRP >= CAPS.SMARTBUY_BONUS_MONTHLY ? "bg-red-500" : "bg-blue-500"}`} style={{ width: `${Math.min((currentStats.smartBuyBonusRP / CAPS.SMARTBUY_BONUS_MONTHLY) * 100, 100)}%` }}></div></div>
                   </div>
                   <div>
-                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium">
-                      <span className="text-zinc-700">Grocery Points</span>
-                      <span
-                        className={
-                          currentStats.groceryMonthlyRewardCap >=
-                          CAPS.groceryMonthlyRewardCap
-                            ? "text-red-500"
-                            : "text-zinc-500"
-                        }
-                      >
-                        {currentStats.groceryMonthlyRewardCap.toLocaleString(
-                          "en-IN"
-                        )}{" "}
-                        / 2,000
-                      </span>
-                    </div>
-                    <div className="w-full bg-zinc-100 rounded-full h-1.5">
-                      <div
-                        className={`h-1.5 rounded-full ${
-                          currentStats.groceryMonthlyRewardCap >=
-                          CAPS.groceryMonthlyRewardCap
-                            ? "bg-red-500"
-                            : "bg-green-500"
-                        }`}
-                        style={{
-                          width: `${Math.min(
-                            (currentStats.groceryMonthlyRewardCap /
-                              CAPS.groceryMonthlyRewardCap) *
-                              100,
-                            100
-                          )}%`,
-                        }}
-                      ></div>
-                    </div>
+                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium"><span className="text-zinc-700">Grocery Points</span><span className={currentStats.groceryMonthlyRewardCap >= CAPS.groceryMonthlyRewardCap ? "text-red-500" : "text-zinc-500"}>{currentStats.groceryMonthlyRewardCap.toLocaleString("en-IN")} / 2,000</span></div>
+                    <div className="w-full bg-zinc-100 rounded-full h-1.5"><div className={`h-1.5 rounded-full ${currentStats.groceryMonthlyRewardCap >= CAPS.groceryMonthlyRewardCap ? "bg-red-500" : "bg-green-500"}`} style={{ width: `${Math.min((currentStats.groceryMonthlyRewardCap / CAPS.groceryMonthlyRewardCap) * 100, 100)}%` }}></div></div>
                   </div>
                   <div>
-                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium">
-                      <span className="text-zinc-700">Telecom Points</span>
-                      <span
-                        className={
-                          currentStats.telecomMonthlyRewardCap >=
-                          CAPS.telecomMonthlyRewardCap
-                            ? "text-red-500"
-                            : "text-zinc-500"
-                        }
-                      >
-                        {currentStats.telecomMonthlyRewardCap.toLocaleString(
-                          "en-IN"
-                        )}{" "}
-                        / 2,000
-                      </span>
-                    </div>
-                    <div className="w-full bg-zinc-100 rounded-full h-1.5">
-                      <div
-                        className={`h-1.5 rounded-full ${
-                          currentStats.telecomMonthlyRewardCap >=
-                          CAPS.telecomMonthlyRewardCap
-                            ? "bg-red-500"
-                            : "bg-indigo-500"
-                        }`}
-                        style={{
-                          width: `${Math.min(
-                            (currentStats.telecomMonthlyRewardCap /
-                              CAPS.telecomMonthlyRewardCap) *
-                              100,
-                            100
-                          )}%`,
-                        }}
-                      ></div>
-                    </div>
+                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium"><span className="text-zinc-700">Telecom Points</span><span className={currentStats.telecomMonthlyRewardCap >= CAPS.telecomMonthlyRewardCap ? "text-red-500" : "text-zinc-500"}>{currentStats.telecomMonthlyRewardCap.toLocaleString("en-IN")} / 2,000</span></div>
+                    <div className="w-full bg-zinc-100 rounded-full h-1.5"><div className={`h-1.5 rounded-full ${currentStats.telecomMonthlyRewardCap >= CAPS.telecomMonthlyRewardCap ? "bg-red-500" : "bg-indigo-500"}`} style={{ width: `${Math.min((currentStats.telecomMonthlyRewardCap / CAPS.telecomMonthlyRewardCap) * 100, 100)}%` }}></div></div>
                   </div>
                   <div>
-                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium">
-                      <span className="text-zinc-700">Utility Points</span>
-                      <span
-                        className={
-                          currentStats.utilityMonthlyRewardCap >=
-                          CAPS.utilityMonthlyRewardCap
-                            ? "text-red-500"
-                            : "text-zinc-500"
-                        }
-                      >
-                        {currentStats.utilityMonthlyRewardCap.toLocaleString(
-                          "en-IN"
-                        )}{" "}
-                        / 2,000
-                      </span>
-                    </div>
-                    <div className="w-full bg-zinc-100 rounded-full h-1.5">
-                      <div
-                        className={`h-1.5 rounded-full ${
-                          currentStats.utilityMonthlyRewardCap >=
-                          CAPS.utilityMonthlyRewardCap
-                            ? "bg-red-500"
-                            : "bg-purple-500"
-                        }`}
-                        style={{
-                          width: `${Math.min(
-                            (currentStats.utilityMonthlyRewardCap /
-                              CAPS.utilityMonthlyRewardCap) *
-                              100,
-                            100
-                          )}%`,
-                        }}
-                      ></div>
-                    </div>
+                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium"><span className="text-zinc-700">Utility Points</span><span className={currentStats.utilityMonthlyRewardCap >= CAPS.utilityMonthlyRewardCap ? "text-red-500" : "text-zinc-500"}>{currentStats.utilityMonthlyRewardCap.toLocaleString("en-IN")} / 2,000</span></div>
+                    <div className="w-full bg-zinc-100 rounded-full h-1.5"><div className={`h-1.5 rounded-full ${currentStats.utilityMonthlyRewardCap >= CAPS.utilityMonthlyRewardCap ? "bg-red-500" : "bg-purple-500"}`} style={{ width: `${Math.min((currentStats.utilityMonthlyRewardCap / CAPS.utilityMonthlyRewardCap) * 100, 100)}%` }}></div></div>
                   </div>
                   <div>
-                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium">
-                      <span className="text-zinc-700">Insurance Points</span>
-                      <span
-                        className={
-                          currentStats.insuranceMonthlyRewardCap >=
-                          CAPS.insuranceMonthlyRewardCap
-                            ? "text-red-500"
-                            : "text-zinc-500"
-                        }
-                      >
-                        {currentStats.insuranceMonthlyRewardCap.toLocaleString(
-                          "en-IN"
-                        )}{" "}
-                        / 5,000
-                      </span>
-                    </div>
-                    <div className="w-full bg-zinc-100 rounded-full h-1.5">
-                      <div
-                        className={`h-1.5 rounded-full ${
-                          currentStats.insuranceMonthlyRewardCap >=
-                          CAPS.insuranceMonthlyRewardCap
-                            ? "bg-red-500"
-                            : "bg-pink-500"
-                        }`}
-                        style={{
-                          width: `${Math.min(
-                            (currentStats.insuranceMonthlyRewardCap /
-                              CAPS.insuranceMonthlyRewardCap) *
-                              100,
-                            100
-                          )}%`,
-                        }}
-                      ></div>
-                    </div>
+                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium"><span className="text-zinc-700">Insurance Points</span><span className={currentStats.insuranceMonthlyRewardCap >= CAPS.insuranceMonthlyRewardCap ? "text-red-500" : "text-zinc-500"}>{currentStats.insuranceMonthlyRewardCap.toLocaleString("en-IN")} / 5,000</span></div>
+                    <div className="w-full bg-zinc-100 rounded-full h-1.5"><div className={`h-1.5 rounded-full ${currentStats.insuranceMonthlyRewardCap >= CAPS.insuranceMonthlyRewardCap ? "bg-red-500" : "bg-pink-500"}`} style={{ width: `${Math.min((currentStats.insuranceMonthlyRewardCap / CAPS.insuranceMonthlyRewardCap) * 100, 100)}%` }}></div></div>
                   </div>
                 </div>
               </div>
@@ -1410,65 +650,23 @@ export default function App() {
                   </thead>
                   <tbody className="divide-y divide-zinc-100">
                     {filteredTxns.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan="6"
-                          className="p-8 text-center text-zinc-500"
-                        >
-                          No transactions found for this period.
-                        </td>
-                      </tr>
+                      <tr><td colSpan="6" className="p-8 text-center text-zinc-500">No transactions found for this period.</td></tr>
                     ) : (
                       filteredTxns.map((txn) => (
-                        <tr
-                          key={txn.id}
-                          className="hover:bg-zinc-50/50 transition-colors"
-                        >
-                          <td className="p-4 text-sm text-zinc-800">
-                            {formatDate(txn.date)}
-                          </td>
-                          <td className="p-4 text-sm">
-                            <span className="bg-zinc-100 text-zinc-700 px-2.5 py-1 rounded-md font-medium text-xs">
-                              {txn.cardHolder}
-                            </span>
-                          </td>
+                        <tr key={txn.id} className="hover:bg-zinc-50/50 transition-colors">
+                          <td className="p-4 text-sm text-zinc-800">{formatDate(txn.date)}</td>
+                          <td className="p-4 text-sm"><span className="bg-zinc-100 text-zinc-700 px-2.5 py-1 rounded-md font-medium text-xs">{txn.cardHolder}</span></td>
                           <td className="p-4 text-sm text-zinc-800">
                             {txn.categoryLabel}
-                            {txn.remarks && (
-                              <span className="block text-xs text-zinc-500 mt-0.5">
-                                {txn.remarks}
-                              </span>
-                            )}
-                            {txn.feeNote && (
-                              <span className="block text-[10px] text-red-500 mt-0.5 font-bold uppercase tracking-wider">
-                                {txn.feeNote}
-                              </span>
-                            )}
-                            {txn.note && (
-                              <span className="block text-[10px] text-amber-500 mt-0.5 font-bold uppercase tracking-wider">
-                                {txn.note}
-                              </span>
-                            )}
+                            {txn.remarks && <span className="block text-xs text-zinc-500 mt-0.5">{txn.remarks}</span>}
+                            {txn.feeNote && <span className="block text-[10px] text-red-500 mt-0.5 font-bold uppercase tracking-wider">{txn.feeNote}</span>}
+                            {txn.note && <span className="block text-[10px] text-amber-500 mt-0.5 font-bold uppercase tracking-wider">{txn.note}</span>}
                           </td>
-                          <td className="p-4 text-sm font-medium text-zinc-900 text-right">
-                            {txn.amount.toLocaleString("en-IN")}
-                          </td>
-                          <td className="p-4 text-sm font-bold text-green-600 text-right">
-                            +{txn.earnedRP}
-                          </td>
+                          <td className="p-4 text-sm font-medium text-zinc-900 text-right">₹ {Number(txn.amount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                          <td className="p-4 text-sm font-bold text-green-600 text-right">+{txn.earnedRP}</td>
                           <td className="p-4 text-center flex justify-center gap-1">
-                            <button
-                              onClick={() => openEditModal(txn)}
-                              className="text-zinc-400 hover:text-blue-500 p-1.5 rounded-lg hover:bg-blue-50 transition-colors"
-                            >
-                              <Edit size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(txn.id)}
-                              className="text-zinc-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-colors"
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                            <button onClick={() => openEditModal(txn)} className="text-zinc-400 hover:text-blue-500 p-1.5 rounded-lg hover:bg-blue-50 transition-colors"><Edit size={16} /></button>
+                            <button onClick={() => handleDelete(txn.id)} className="text-zinc-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-colors"><Trash2 size={16} /></button>
                           </td>
                         </tr>
                       ))
@@ -1484,131 +682,55 @@ export default function App() {
               <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-zinc-200 shadow-sm">
                 <div>
                   <h3 className="font-bold text-zinc-900">Rewards Ledger</h3>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Manage manual adjustments and redemptions.
-                  </p>
+                  <p className="text-xs text-zinc-500 mt-1">Manage manual adjustments and redemptions.</p>
                 </div>
-                <button
-                  onClick={() => setShowRewardModal(true)}
-                  className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm"
-                >
-                  Log Points
-                </button>
+                <button onClick={() => setShowRewardModal(true)} className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm">Log Points</button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {cardholders.map((holder) => (
-                  <div
-                    key={holder}
-                    className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm"
-                  >
-                    <div className="font-bold text-zinc-900 mb-4 pb-2 border-b border-zinc-100">
-                      {holder}
-                    </div>
+                {cardholders.map(holder => (
+                  <div key={holder} className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm">
+                    <div className="font-bold text-zinc-900 mb-4 pb-2 border-b border-zinc-100">{holder}</div>
                     <div className="space-y-2 text-sm">
-                      <div className="flex justify-between text-zinc-500">
-                        <span>Earned (All Time)</span>
-                        <span>
-                          {rewardsBalance[holder].earned.toLocaleString()} RP
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-zinc-500">
-                        <span>Manual Adjustments</span>
-                        <span className="text-green-600">
-                          +{rewardsBalance[holder].adjustments.toLocaleString()}{" "}
-                          RP
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-zinc-500">
-                        <span>Redemptions</span>
-                        <span className="text-red-500">
-                          -{rewardsBalance[holder].redemptions.toLocaleString()}{" "}
-                          RP
-                        </span>
-                      </div>
-                      <div className="flex justify-between font-bold text-zinc-900 pt-2 border-t border-zinc-100 mt-2">
-                        <span>Available Balance</span>
-                        <span className="text-amber-500">
-                          {rewardsBalance[holder].available.toLocaleString()} RP
-                        </span>
-                      </div>
+                      <div className="flex justify-between text-zinc-500"><span>Earned (All Time)</span><span>{rewardsBalance[holder].earned.toLocaleString()} RP</span></div>
+                      <div className="flex justify-between text-zinc-500"><span>Manual Adjustments</span><span className="text-green-600">+{rewardsBalance[holder].adjustments.toLocaleString()} RP</span></div>
+                      <div className="flex justify-between text-zinc-500"><span>Redemptions</span><span className="text-red-500">-{rewardsBalance[holder].redemptions.toLocaleString()} RP</span></div>
+                      <div className="flex justify-between font-bold text-zinc-900 pt-2 border-t border-zinc-100 mt-2"><span>Available Balance</span><span className="text-amber-500">{rewardsBalance[holder].available.toLocaleString()} RP</span></div>
                     </div>
                   </div>
                 ))}
               </div>
 
               <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden mt-6">
-                <div className="p-4 bg-zinc-50 border-b border-zinc-200 font-bold text-sm text-zinc-700">
-                  Manual Points Log
-                </div>
+                <div className="p-4 bg-zinc-50 border-b border-zinc-200 font-bold text-sm text-zinc-700">Manual Points Log</div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left whitespace-nowrap">
                     <tbody className="divide-y divide-zinc-100">
-                      {rewardsLog.length === 0 ? (
-                        <tr>
-                          <td className="p-6 text-center text-sm text-zinc-500">
-                            No manual points logged yet.
+                      {rewardsLog.length === 0 ? <tr><td className="p-6 text-center text-sm text-zinc-500">No manual points logged yet.</td></tr> : rewardsLog.sort((a,b) => new Date(b.date) - new Date(a.date)).map(log => (
+                        <tr key={log.id} className="hover:bg-zinc-50">
+                          <td className="p-4 text-sm text-zinc-500 w-32">{formatDate(log.date)}</td>
+                          <td className="p-4 text-sm font-medium">{log.cardHolder}</td>
+                          <td className="p-4 text-sm">
+                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-bold ${log.type === 'adjustment' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                              {log.type === 'adjustment' ? <PlusCircle size={12}/> : <MinusCircle size={12}/>} {log.type.toUpperCase()}
+                            </span>
+                            {log.remarks && <span className="ml-2 text-zinc-500">{log.remarks}</span>}
+                          </td>
+                          <td className={`p-4 text-sm font-bold text-right ${log.type === 'adjustment' ? 'text-green-600' : 'text-red-500'}`}>
+                            {log.type === 'adjustment' ? '+' : '-'}{log.points.toLocaleString()}
+                          </td>
+                          <td className="p-4 text-center w-16">
+                            <button onClick={() => handleDeleteReward(log.id)} className="text-zinc-400 hover:text-red-500"><Trash2 size={16} /></button>
                           </td>
                         </tr>
-                      ) : (
-                        rewardsLog
-                          .sort((a, b) => new Date(b.date) - new Date(a.date))
-                          .map((log) => (
-                            <tr key={log.id} className="hover:bg-zinc-50">
-                              <td className="p-4 text-sm text-zinc-500 w-32">
-                                {formatDate(log.date)}
-                              </td>
-                              <td className="p-4 text-sm font-medium">
-                                {log.cardHolder}
-                              </td>
-                              <td className="p-4 text-sm">
-                                <span
-                                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-bold ${
-                                    log.type === "adjustment"
-                                      ? "bg-green-100 text-green-700"
-                                      : "bg-red-100 text-red-700"
-                                  }`}
-                                >
-                                  {log.type === "adjustment" ? (
-                                    <PlusCircle size={12} />
-                                  ) : (
-                                    <MinusCircle size={12} />
-                                  )}{" "}
-                                  {log.type.toUpperCase()}
-                                </span>
-                                {log.remarks && (
-                                  <span className="ml-2 text-zinc-500">
-                                    {log.remarks}
-                                  </span>
-                                )}
-                              </td>
-                              <td
-                                className={`p-4 text-sm font-bold text-right ${
-                                  log.type === "adjustment"
-                                    ? "text-green-600"
-                                    : "text-red-500"
-                                }`}
-                              >
-                                {log.type === "adjustment" ? "+" : "-"}
-                                {log.points.toLocaleString()}
-                              </td>
-                              <td className="p-4 text-center w-16">
-                                <button
-                                  onClick={() => handleDeleteReward(log.id)}
-                                  className="text-zinc-400 hover:text-red-500"
-                                >
-                                  <Trash2 size={16} />
-                                </button>
-                              </td>
-                            </tr>
-                          ))
-                      )}
+                      ))}
                     </tbody>
                   </table>
                 </div>
               </div>
             </div>
           )}
+
         </div>
       </main>
 
@@ -1617,129 +739,83 @@ export default function App() {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-screen overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
             <div className="sticky top-0 bg-white z-10 p-5 border-b border-zinc-100 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-zinc-900">
-                {isEditing ? "Edit Spend" : "Log Spend"}
-              </h3>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="text-zinc-400 hover:text-zinc-600"
-              >
-                ✕
-              </button>
+              <h3 className="text-lg font-bold text-zinc-900">{isEditing ? "Edit Spend" : "Log Spend"}</h3>
+              <button onClick={() => setShowAddModal(false)} className="text-zinc-400 hover:text-zinc-600">✕</button>
             </div>
             <form onSubmit={handleAddTransaction} className="p-5 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">
-                    Date
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={newTxn.date}
-                    onChange={(e) =>
-                      setNewTxn({ ...newTxn, date: e.target.value })
-                    }
-                    className="w-full border border-zinc-200 rounded-xl p-3 focus:ring-2 focus:ring-amber-500 outline-none text-sm"
-                  />
+                  <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">Date</label>
+                  <input type="date" required value={newTxn.date} onChange={(e) => setNewTxn({ ...newTxn, date: e.target.value })} className="w-full border border-zinc-200 rounded-xl p-3 focus:ring-2 focus:ring-amber-500 outline-none text-sm" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">
-                    Amount (₹)
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    placeholder="5000"
-                    value={newTxn.amount}
-                    onChange={(e) =>
-                      setNewTxn({ ...newTxn, amount: e.target.value })
-                    }
-                    className="w-full border border-zinc-200 rounded-xl p-3 focus:ring-2 focus:ring-amber-500 outline-none text-sm"
-                  />
+                  <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">Amount (₹)</label>
+                  <input type="number" step="0.01" required min="0.01" placeholder="5000" value={newTxn.amount} onChange={(e) => setNewTxn({ ...newTxn, amount: e.target.value })} className="w-full border border-zinc-200 rounded-xl p-3 focus:ring-2 focus:ring-amber-500 outline-none text-sm" />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">
-                  Cardholder
-                </label>
+                <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">Cardholder</label>
                 <div className="relative">
-                  <select
-                    value={newTxn.cardHolder}
-                    onChange={(e) =>
-                      setNewTxn({ ...newTxn, cardHolder: e.target.value })
-                    }
-                    className="w-full border border-zinc-200 rounded-xl p-3 appearance-none focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm"
-                  >
-                    {cardholders.map((h) => (
-                      <option key={h} value={h}>
-                        {h}
-                      </option>
-                    ))}
+                  <select value={newTxn.cardHolder} onChange={(e) => setNewTxn({ ...newTxn, cardHolder: e.target.value })} className="w-full border border-zinc-200 rounded-xl p-3 appearance-none focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm">
+                    {cardholders.map((h) => <option key={h} value={h}>{h}</option>)}
                   </select>
-                  <ChevronDown
-                    className="absolute right-3 top-3.5 text-zinc-400 pointer-events-none"
-                    size={16}
-                  />
+                  <ChevronDown className="absolute right-3 top-3.5 text-zinc-400 pointer-events-none" size={16} />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">
-                  Category
-                </label>
+                <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">Category</label>
                 <div className="relative">
-                  <select
-                    value={newTxn.categoryId}
-                    onChange={(e) =>
-                      setNewTxn({ ...newTxn, categoryId: e.target.value })
-                    }
-                    className="w-full border border-zinc-200 rounded-xl p-3 appearance-none focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm"
-                  >
-                    {CATEGORIES.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.label}
-                      </option>
-                    ))}
+                  <select value={newTxn.categoryId} onChange={(e) => setNewTxn({ ...newTxn, categoryId: e.target.value })} className="w-full border border-zinc-200 rounded-xl p-3 appearance-none focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm">
+                    {CATEGORIES.map((cat) => <option key={cat.id} value={cat.id}>{cat.label}</option>)}
                   </select>
-                  <ChevronDown
-                    className="absolute right-3 top-3.5 text-zinc-400 pointer-events-none"
-                    size={16}
-                  />
+                  <ChevronDown className="absolute right-3 top-3.5 text-zinc-400 pointer-events-none" size={16} />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">
-                  Remarks / Refund Note (Optional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g., Amazon Shopping, Partial Refund..."
-                  value={newTxn.remarks}
-                  onChange={(e) =>
-                    setNewTxn({ ...newTxn, remarks: e.target.value })
-                  }
-                  className="w-full border border-zinc-200 rounded-xl p-3 focus:ring-2 focus:ring-amber-500 outline-none text-sm"
-                />
-                <p className="text-[10px] text-zinc-400 mt-1">
-                  If handling a refund, edit the original transaction amount
-                  down to the net spend to perfectly adjust monthly caps.
-                </p>
+                <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">Remarks / Refund Note (Optional)</label>
+                <input type="text" placeholder="e.g., Amazon Shopping, Partial Refund..." value={newTxn.remarks} onChange={(e) => setNewTxn({ ...newTxn, remarks: e.target.value })} className="w-full border border-zinc-200 rounded-xl p-3 focus:ring-2 focus:ring-amber-500 outline-none text-sm" />
+                <p className="text-[10px] text-zinc-400 mt-1">If handling a refund, edit the original transaction amount down to the net spend to perfectly adjust monthly caps.</p>
               </div>
+
+              {isEditing && (
+                <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 space-y-2 mt-2">
+                  <label className="block text-xs font-bold text-amber-800 uppercase tracking-wider">Log a Partial Refund</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      step="0.01"
+                      placeholder="Refund Amount (₹)"
+                      value={refundInput}
+                      onChange={(e) => setRefundInput(e.target.value)}
+                      className="flex-1 border border-amber-200 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-amber-500 bg-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!refundInput || isNaN(refundInput) || Number(refundInput) <= 0) return;
+                        const newAmt = Math.max(0, Number(newTxn.amount) - Number(refundInput));
+                        const refundMsg = `Refund: ₹${refundInput}`;
+                        setNewTxn(prev => ({
+                          ...prev,
+                          amount: Number(newAmt.toFixed(2)),
+                          remarks: prev.remarks ? `${prev.remarks} | ${refundMsg}` : refundMsg
+                        }));
+                        setRefundInput("");
+                      }}
+                      className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-2 rounded-lg text-sm transition-colors shadow-sm"
+                    >
+                      Deduct
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-amber-700 font-medium leading-tight">
+                    This automatically subtracts the refund from the main amount above and adds a note.
+                  </p>
+                </div>
+              )}
+
               <div className="pt-2 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="flex-1 px-4 py-3 border border-zinc-200 text-zinc-700 font-bold text-sm rounded-xl hover:bg-zinc-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-3 bg-zinc-900 text-white font-bold text-sm rounded-xl hover:bg-zinc-800"
-                >
-                  {isEditing ? "Save Changes" : "Save Spend"}
-                </button>
+                <button type="button" onClick={() => { setShowAddModal(false); setRefundInput(""); }} className="flex-1 px-4 py-3 border border-zinc-200 text-zinc-700 font-bold text-sm rounded-xl hover:bg-zinc-50">Cancel</button>
+                <button type="submit" className="flex-1 px-4 py-3 bg-zinc-900 text-white font-bold text-sm rounded-xl hover:bg-zinc-800">{isEditing ? "Save Changes" : "Save Spend"}</button>
               </div>
             </form>
           </div>
@@ -1751,96 +827,36 @@ export default function App() {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md animate-in fade-in zoom-in-95 duration-200">
             <div className="p-5 border-b border-zinc-100 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-zinc-900">
-                Log Manual Points
-              </h3>
-              <button
-                onClick={() => setShowRewardModal(false)}
-                className="text-zinc-400 hover:text-zinc-600"
-              >
-                ✕
-              </button>
+              <h3 className="text-lg font-bold text-zinc-900">Log Manual Points</h3>
+              <button onClick={() => setShowRewardModal(false)} className="text-zinc-400 hover:text-zinc-600">✕</button>
             </div>
             <form onSubmit={handleAddReward} className="p-5 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">
-                    Type
-                  </label>
-                  <select
-                    value={newReward.type}
-                    onChange={(e) =>
-                      setNewReward({ ...newReward, type: e.target.value })
-                    }
-                    className="w-full border border-zinc-200 rounded-xl p-3 bg-white text-sm outline-none"
-                  >
+                  <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">Type</label>
+                  <select value={newReward.type} onChange={e => setNewReward({...newReward, type: e.target.value})} className="w-full border border-zinc-200 rounded-xl p-3 bg-white text-sm outline-none">
                     <option value="adjustment">Adjustment (+)</option>
                     <option value="redemption">Redemption (-)</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">
-                    Points
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    placeholder="e.g. 500"
-                    value={newReward.points}
-                    onChange={(e) =>
-                      setNewReward({ ...newReward, points: e.target.value })
-                    }
-                    className="w-full border border-zinc-200 rounded-xl p-3 outline-none text-sm"
-                  />
+                  <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">Points</label>
+                  <input type="number" required min="1" placeholder="e.g. 500" value={newReward.points} onChange={e => setNewReward({...newReward, points: e.target.value})} className="w-full border border-zinc-200 rounded-xl p-3 outline-none text-sm" />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">
-                  Cardholder
-                </label>
-                <select
-                  value={newReward.cardHolder}
-                  onChange={(e) =>
-                    setNewReward({ ...newReward, cardHolder: e.target.value })
-                  }
-                  className="w-full border border-zinc-200 rounded-xl p-3 bg-white text-sm outline-none"
-                >
-                  {cardholders.map((h) => (
-                    <option key={h} value={h}>
-                      {h}
-                    </option>
-                  ))}
+                <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">Cardholder</label>
+                <select value={newReward.cardHolder} onChange={e => setNewReward({...newReward, cardHolder: e.target.value})} className="w-full border border-zinc-200 rounded-xl p-3 bg-white text-sm outline-none">
+                  {cardholders.map(h => <option key={h} value={h}>{h}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">
-                  Remarks
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g., Missing points credited, Flight booking..."
-                  value={newReward.remarks}
-                  onChange={(e) =>
-                    setNewReward({ ...newReward, remarks: e.target.value })
-                  }
-                  className="w-full border border-zinc-200 rounded-xl p-3 outline-none text-sm"
-                />
+                <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">Remarks</label>
+                <input type="text" placeholder="e.g., Missing points credited, Flight booking..." value={newReward.remarks} onChange={e => setNewReward({...newReward, remarks: e.target.value})} className="w-full border border-zinc-200 rounded-xl p-3 outline-none text-sm" />
               </div>
               <div className="pt-2 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowRewardModal(false)}
-                  className="flex-1 px-4 py-3 border border-zinc-200 text-zinc-700 font-bold text-sm rounded-xl"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-3 bg-amber-500 text-white font-bold text-sm rounded-xl hover:bg-amber-600"
-                >
-                  Save Points
-                </button>
+                <button type="button" onClick={() => setShowRewardModal(false)} className="flex-1 px-4 py-3 border border-zinc-200 text-zinc-700 font-bold text-sm rounded-xl">Cancel</button>
+                <button type="submit" className="flex-1 px-4 py-3 bg-amber-500 text-white font-bold text-sm rounded-xl hover:bg-amber-600">Save Points</button>
               </div>
             </form>
           </div>
@@ -1852,52 +868,22 @@ export default function App() {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95">
             <div className="p-5 border-b border-zinc-100 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-zinc-900">
-                Manage Cardholders
-              </h3>
-              <button
-                onClick={() => setShowSettingsModal(false)}
-                className="text-zinc-400 hover:text-zinc-600"
-              >
-                ✕
-              </button>
+              <h3 className="text-lg font-bold text-zinc-900">Manage Cardholders</h3>
+              <button onClick={() => setShowSettingsModal(false)} className="text-zinc-400 hover:text-zinc-600">✕</button>
             </div>
             <div className="p-5 space-y-4">
               <p className="text-[11px] font-medium text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-100">
-                If you rename a cardholder here, the app will automatically
-                update all of their historical transactions so you don't lose
-                any data!
+                If you rename a cardholder here, the app will automatically update all of their historical transactions so you don't lose any data!
               </p>
               {editHolders.map((holder, index) => (
                 <div key={index}>
-                  <label className="block text-xs font-bold text-zinc-400 mb-1 uppercase tracking-wider">
-                    {index === 0 ? "Primary Card" : `Add-on ${index}`}
-                  </label>
-                  <input
-                    type="text"
-                    value={holder}
-                    onChange={(e) => {
-                      const newH = [...editHolders];
-                      newH[index] = e.target.value;
-                      setEditHolders(newH);
-                    }}
-                    className="w-full border border-zinc-200 rounded-xl p-3 focus:ring-2 focus:ring-amber-500 outline-none font-medium text-sm"
-                  />
+                  <label className="block text-xs font-bold text-zinc-400 mb-1 uppercase tracking-wider">{index === 0 ? "Primary Card" : `Add-on ${index}`}</label>
+                  <input type="text" value={holder} onChange={(e) => { const newH = [...editHolders]; newH[index] = e.target.value; setEditHolders(newH); }} className="w-full border border-zinc-200 rounded-xl p-3 focus:ring-2 focus:ring-amber-500 outline-none font-medium text-sm" />
                 </div>
               ))}
               <div className="pt-2 flex gap-3">
-                <button
-                  onClick={() => setShowSettingsModal(false)}
-                  className="flex-1 px-4 py-3 border border-zinc-200 text-zinc-700 font-bold text-sm rounded-xl hover:bg-zinc-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveSettings}
-                  className="flex-1 px-4 py-3 bg-zinc-900 text-white font-bold text-sm rounded-xl hover:bg-zinc-800"
-                >
-                  Save Names
-                </button>
+                <button onClick={() => setShowSettingsModal(false)} className="flex-1 px-4 py-3 border border-zinc-200 text-zinc-700 font-bold text-sm rounded-xl hover:bg-zinc-50">Cancel</button>
+                <button onClick={handleSaveSettings} className="flex-1 px-4 py-3 bg-zinc-900 text-white font-bold text-sm rounded-xl hover:bg-zinc-800">Save Names</button>
               </div>
             </div>
           </div>
@@ -1909,83 +895,25 @@ export default function App() {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-screen flex flex-col animate-in fade-in zoom-in-95">
             <div className="p-5 border-b border-zinc-100 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-zinc-900 flex items-center gap-2">
-                <BookOpen size={20} className="text-amber-500" /> Official HDFC
-                Policies
-              </h3>
-              <button
-                onClick={() => setShowPolicyModal(false)}
-                className="text-zinc-400 hover:text-zinc-600"
-              >
-                ✕
-              </button>
+              <h3 className="text-lg font-bold text-zinc-900 flex items-center gap-2"><BookOpen size={20} className="text-amber-500" /> Official HDFC Policies</h3>
+              <button onClick={() => setShowPolicyModal(false)} className="text-zinc-400 hover:text-zinc-600">✕</button>
             </div>
             <div className="p-5 overflow-y-auto space-y-5">
               {isPolicyUpdateDue ? (
-                <div className="bg-amber-50 text-amber-800 p-4 rounded-xl text-sm flex items-start gap-3 border border-amber-200">
-                  <ShieldAlert
-                    size={20}
-                    className="shrink-0 mt-0.5 text-amber-600"
-                  />
-                  <div>
-                    <strong>Policy Verification Due!</strong> It has been over 6
-                    months since this app's rules were locked (June 2026).
-                    Please open the links below to verify if HDFC has changed
-                    any caps.
-                  </div>
-                </div>
+                <div className="bg-amber-50 text-amber-800 p-4 rounded-xl text-sm flex items-start gap-3 border border-amber-200"><ShieldAlert size={20} className="shrink-0 mt-0.5 text-amber-600" /><div><strong>Policy Verification Due!</strong> It has been over 6 months since this app's rules were locked (June 2026). Please open the links below to verify if HDFC has changed any caps.</div></div>
               ) : (
-                <div className="bg-green-50 text-green-800 p-4 rounded-xl text-sm flex items-start gap-3 border border-green-200">
-                  <CheckCircle2
-                    size={20}
-                    className="shrink-0 mt-0.5 text-green-600"
-                  />
-                  <div>
-                    <strong>Rules are up to date.</strong> This tracker is
-                    locked to the HDFC rules published in June 2026.
-                  </div>
-                </div>
+                <div className="bg-green-50 text-green-800 p-4 rounded-xl text-sm flex items-start gap-3 border border-green-200"><CheckCircle2 size={20} className="shrink-0 mt-0.5 text-green-600" /><div><strong>Rules are up to date.</strong> This tracker is locked to the HDFC rules published in June 2026.</div></div>
               )}
               <div className="space-y-2">
                 {[
-                  {
-                    title: "HDFC Bank MITC",
-                    sub: "Baseline: Updated 27 May 2026",
-                    link: "https://www.hdfc.bank.in/content/dam/hdfcbankpws/in/en/personal-banking/discover-products/cards/credit-cards/personal-mitc/mitc-in-english.pdf",
-                  },
-                  {
-                    title: "Diners Black Metal T&C",
-                    sub: "Baseline: 1 June 2026",
-                    link: "https://www.hdfc.bank.in/content/dam/hdfcbankpws/in/en/personal-banking/discover-products/cards/credit-cards/diners-club-black-metal-edition-credit-card/diners-club-metal-tandc.pdf",
-                  },
-                  {
-                    title: "SmartBuy Core Benefit Offer",
-                    sub: "10X/5X/3X Multiplier Validations",
-                    link: "https://offers.smartbuy.hdfc.bank.in/offer_details/smartbuy/15282",
-                  },
-                  {
-                    title: "HDFC SMS Communication Charges",
-                    sub: "Validates the 1% fee on Rent & Utilities",
-                    link: "https://v.hdfc.bank.in/htdocs/common/sms-communication.html",
-                  },
-                ].map((doc) => (
-                  <a
-                    key={doc.title}
-                    href={doc.link}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center justify-between p-3 rounded-xl border border-zinc-200 hover:border-amber-500 hover:bg-amber-50 transition-colors group"
-                  >
-                    <div>
-                      <div className="text-sm font-bold text-zinc-800 group-hover:text-amber-700">
-                        {doc.title}
-                      </div>
-                      <div className="text-xs text-zinc-500">{doc.sub}</div>
-                    </div>
-                    <ExternalLink
-                      size={16}
-                      className="text-zinc-400 group-hover:text-amber-600"
-                    />
+                  { title: "HDFC Bank MITC", sub: "Baseline: Updated 27 May 2026", link: "https://www.hdfc.bank.in/content/dam/hdfcbankpws/in/en/personal-banking/discover-products/cards/credit-cards/personal-mitc/mitc-in-english.pdf" },
+                  { title: "Diners Black Metal T&C", sub: "Baseline: 1 June 2026", link: "https://www.hdfc.bank.in/content/dam/hdfcbankpws/in/en/personal-banking/discover-products/cards/credit-cards/diners-club-black-metal-edition-credit-card/diners-club-metal-tandc.pdf" },
+                  { title: "SmartBuy Core Benefit Offer", sub: "10X/5X/3X Multiplier Validations", link: "https://offers.smartbuy.hdfc.bank.in/offer_details/smartbuy/15282" },
+                  { title: "HDFC SMS Communication Charges", sub: "Validates the 1% fee on Rent & Utilities", link: "https://v.hdfc.bank.in/htdocs/common/sms-communication.html" }
+                ].map(doc => (
+                  <a key={doc.title} href={doc.link} target="_blank" rel="noreferrer" className="flex items-center justify-between p-3 rounded-xl border border-zinc-200 hover:border-amber-500 hover:bg-amber-50 transition-colors group">
+                    <div><div className="text-sm font-bold text-zinc-800 group-hover:text-amber-700">{doc.title}</div><div className="text-xs text-zinc-500">{doc.sub}</div></div>
+                    <ExternalLink size={16} className="text-zinc-400 group-hover:text-amber-600" />
                   </a>
                 ))}
               </div>
