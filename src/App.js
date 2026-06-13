@@ -619,46 +619,64 @@ export default function App() {
     setShowSettingsModal(false);
   };
 
-  // --- Auth Screen ---
   if (!user) {
     return (
-      <div className="flex h-screen items-center justify-center bg-zinc-900 font-sans p-4">
-        <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm text-center">
-          <div className="bg-amber-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-600">
-            <Lock size={32} />
+      <div className="flex flex-col h-screen items-center justify-center bg-zinc-900 font-sans p-4 relative overflow-hidden">
+        {/* Subtle dot matrix background to add texture without heavy images */}
+        <div
+          className="absolute inset-0 opacity-10 pointer-events-none"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at center, #a1a1aa 1px, transparent 1px)",
+            backgroundSize: "24px 24px",
+          }}
+        ></div>
+
+        <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md text-center relative z-10">
+          <div className="bg-zinc-900 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-amber-500 shadow-inner">
+            <CreditCard size={32} />
           </div>
-          <h2 className="text-2xl font-bold text-zinc-900 mb-2">
-            Private Family Tracker
+          <h2 className="text-2xl font-black text-zinc-900 mb-2 uppercase tracking-wide">
+            HDFC Diners Black Metal <br />
+            <span className="text-amber-500">Spends Tracker</span>
           </h2>
-          <p className="text-zinc-500 text-sm mb-6">
-            Enter your email and password to access the dashboard.
+          <p className="text-zinc-500 text-sm mb-8 font-medium">
+            Enter your email and password to access the tracker.
           </p>
           <form onSubmit={handleLogin} className="space-y-4">
             <input
               type="email"
               value={emailInput}
               onChange={(e) => setEmailInput(e.target.value)}
-              placeholder="Email ID"
-              className="w-full text-center text-lg font-medium border border-zinc-200 rounded-xl p-4 focus:ring-2 focus:ring-amber-500 outline-none"
+              placeholder="Authorized Email ID"
+              className="w-full text-center text-lg font-medium border border-zinc-200 rounded-xl p-4 focus:ring-2 focus:ring-amber-500 outline-none bg-zinc-50"
               autoFocus
             />
             <input
               type="password"
               value={passwordInput}
               onChange={(e) => setPasswordInput(e.target.value)}
-              placeholder="Password"
-              className="w-full text-center text-lg font-medium border border-zinc-200 rounded-xl p-4 focus:ring-2 focus:ring-amber-500 outline-none"
+              placeholder="Secure Password"
+              className="w-full text-center text-lg font-medium border border-zinc-200 rounded-xl p-4 focus:ring-2 focus:ring-amber-500 outline-none bg-zinc-50"
             />
             {authError && (
-              <p className="text-red-500 text-sm font-medium">{authError}</p>
+              <p className="text-red-500 text-sm font-bold bg-red-50 p-2 rounded-lg">
+                {authError}
+              </p>
             )}
             <button
               type="submit"
-              className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 rounded-xl shadow-sm transition-colors"
+              className="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-bold py-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 mt-2"
             >
-              Secure Login
+              <Lock size={18} className="text-amber-500" /> Secure Login
             </button>
           </form>
+        </div>
+
+        {/* Custom Footnote */}
+        <div className="mt-8 text-zinc-500 text-xs font-medium relative z-10 flex items-center gap-2">
+          <ShieldAlert size={14} /> Contact Rohit Chopra for any issues or
+          access requirement
         </div>
       </div>
     );
@@ -841,7 +859,7 @@ export default function App() {
                   ₹{currentStats.totalFees.toLocaleString("en-IN")}
                 </strong>{" "}
                 in bank fees this month based on the 1% rule for Rent, Utility
-                (>50k), Fuel (>15k), or Third-party Education apps.
+                (&gt;50k), Fuel (&gt;15k), or Third-party Education apps.
               </div>
             </div>
           )}
@@ -892,7 +910,6 @@ export default function App() {
                 )}
               </div>
 
-              {/* Top Row: Spends & Milestones */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Total Spends - Annual Focus */}
                 <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm flex flex-col justify-center relative overflow-hidden">
@@ -1297,6 +1314,7 @@ export default function App() {
         </div>
       </main>
 
+      {}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -1408,6 +1426,7 @@ export default function App() {
         </div>
       )}
 
+      {}
       {showSettingsModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95">
@@ -1463,7 +1482,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Policy & Rules Hub Modal */}
+      {}
       {showPolicyModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95">
