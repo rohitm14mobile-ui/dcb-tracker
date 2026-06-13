@@ -11,12 +11,15 @@ import {
   Award,
   CheckCircle2,
   ChevronDown,
-  Activity,
   Filter,
   Lock,
   BookOpen,
   ExternalLink,
   ShieldAlert,
+  Edit,
+  Gift,
+  PlusCircle,
+  MinusCircle,
 } from "lucide-react";
 import { initializeApp } from "firebase/app";
 import {
@@ -34,6 +37,7 @@ import {
   deleteDoc,
   doc,
   setDoc,
+  updateDoc,
 } from "firebase/firestore";
 
 // --- HDFC DCB Categories & Rules (Updated for June 2026 MITC) ---
@@ -198,7 +202,6 @@ const CATEGORIES = [
     multiplier: 1,
     smartbuy: false,
     baseEligible: true,
-    rewardCapKey: "upiMonthlyRewardCap",
   },
   {
     id: "education-third-party",
@@ -251,7 +254,6 @@ const CAPS = {
   utilityMonthlyRewardCap: 2000,
   telecomMonthlyRewardCap: 2000,
   insuranceMonthlyRewardCap: 5000,
-  upiMonthlyRewardCap: 500,
   DINING_DAILY: 1000,
   QUARTERLY_MILESTONE: 400000,
   ANNUAL_MILESTONE: 800000,
@@ -279,7 +281,7 @@ const MONTHS = [
   "Dec",
 ];
 
-// Helper Date Formatter (DD-Mmm-YYYY)
+// Helper Formatter
 const formatDate = (dateString) => {
   const d = new Date(dateString);
   if (isNaN(d)) return dateString;
@@ -289,7 +291,7 @@ const formatDate = (dateString) => {
   return `${day}-${month}-${year}`;
 };
 
-// --- Exact Database Keys you provided ---
+// --- Firebase Config ---
 const firebaseConfig = {
   apiKey: "AIzaSyCDX7vURjlAeUmK4wRgtzqqMGPWCOP3-Xg",
   authDomain: "dcb-tracker.firebaseapp.com",
@@ -305,37 +307,48 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 export default function App() {
-  // Authentication State
   const [user, setUser] = useState(null);
   const [emailInput, setEmailInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
   const [authError, setAuthError] = useState("");
 
   const [transactions, setTransactions] = useState([]);
+  const [rewardsLog, setRewardsLog] = useState([]);
   const [cardholders, setCardholders] = useState(DEFAULT_CARDHOLDERS);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
 
-  // Custom Date Filters
   const currentDate = new Date();
-  const [selMonth, setSelMonth] = useState(currentDate.getMonth() + 1); // 1-12
+  const [selMonth, setSelMonth] = useState(currentDate.getMonth() + 1);
   const [selYear, setSelYear] = useState(currentDate.getFullYear());
   const [filterHolder, setFilterHolder] = useState("All");
 
-  // Modals
   const [showAddModal, setShowAddModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showPolicyModal, setShowPolicyModal] = useState(false);
+  const [showRewardModal, setShowRewardModal] = useState(false);
   const [editHolders, setEditHolders] = useState([...DEFAULT_CARDHOLDERS]);
 
-  const [newTxn, setNewTxn] = useState({
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTxnId, setEditTxnId] = useState(null);
+
+  const initialTxnState = {
     date: new Date().toISOString().substring(0, 10),
     amount: "",
     categoryId: CATEGORIES[0].id,
     cardHolder: "",
+    remarks: "",
+  };
+  const [newTxn, setNewTxn] = useState(initialTxnState);
+
+  const [newReward, setNewReward] = useState({
+    date: new Date().toISOString().substring(0, 10),
+    type: "adjustment", // adjustment or redemption
+    points: "",
+    cardHolder: "",
+    remarks: "",
   });
 
-  // Check saved login
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -354,22 +367,30 @@ export default function App() {
     }
   };
 
-  const handleLogout = async () => {
-    await signOut(auth);
-  };
+  const handleLogout = async () => await signOut(auth);
 
   useEffect(() => {
     if (!user) return;
 
-    // Fetch Transactions directly from your Firebase Database
-    const qTxn = query(collection(db, "family_transactions"));
-    const unsubTxn = onSnapshot(qTxn, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setTransactions(data);
-      setLoading(false);
-    });
+    const unsubTxn = onSnapshot(
+      query(collection(db, "family_transactions")),
+      (snapshot) => {
+        setTransactions(
+          snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+        );
+        setLoading(false);
+      }
+    );
 
-    // Fetch Settings (Cardholders) directly from your Firebase Database
+    const unsubRewards = onSnapshot(
+      query(collection(db, "family_rewards")),
+      (snapshot) => {
+        setRewardsLog(
+          snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+        );
+      }
+    );
+
     const unsubSet = onSnapshot(
       doc(db, "family_settings", "profile"),
       (docSnap) => {
@@ -384,27 +405,28 @@ export default function App() {
 
     return () => {
       unsubTxn();
+      unsubRewards();
       unsubSet();
     };
   }, [user]);
 
-  // Set default cardholder once loaded
   useEffect(() => {
-    if (!newTxn.cardHolder && cardholders.length > 0) {
+    if (!newTxn.cardHolder && cardholders.length > 0)
       setNewTxn((prev) => ({ ...prev, cardHolder: cardholders[0] }));
-    }
+    if (!newReward.cardHolder && cardholders.length > 0)
+      setNewReward((prev) => ({ ...prev, cardHolder: cardholders[0] }));
   }, [cardholders]);
 
   const processedData = useMemo(() => {
-    // Sort chronologically
     const sorted = [...transactions].sort(
       (a, b) => new Date(a.date) - new Date(b.date)
     );
     const monthlyState = {};
     const processedTxns = [];
+    const lifetimeEarnedRP = {};
 
     sorted.forEach((txn) => {
-      const monthKey = txn.date.substring(0, 7); // YYYY-MM
+      const monthKey = txn.date.substring(0, 7);
       const dateKey = txn.date;
 
       if (!monthlyState[monthKey]) {
@@ -413,12 +435,12 @@ export default function App() {
           utilityMonthlyRewardCap: 0,
           telecomMonthlyRewardCap: 0,
           insuranceMonthlyRewardCap: 0,
-          upiMonthlyRewardCap: 0,
           smartBuyBonusRP: 0,
           dailyDining: {},
           totalSpend: 0,
           totalEarnedRP: 0,
-          totalFees: 0, // NEW: Tracking HDFC 1% Surcharges
+          totalFees: 0,
+          feeBreakdown: { rent: 0, utility: 0, fuel: 0, education: 0 },
           cardholderSpends: {},
         };
       }
@@ -431,28 +453,31 @@ export default function App() {
       mState.cardholderSpends[txn.cardHolder] =
         (mState.cardholderSpends[txn.cardHolder] || 0) + Number(txn.amount);
 
-      let earnedRP = 0;
-      let note = "";
-      let fee = 0;
-      let feeNote = "";
+      let earnedRP = 0,
+        note = "",
+        fee = 0,
+        feeNote = "";
 
-      // --- HDFC 1% Surcharge Processing ---
+      // Fee Calcs
       if (category.isRent) {
         fee = Math.min(Number(txn.amount) * 0.01, 3000);
         feeNote = `+ ₹${fee.toLocaleString("en-IN")} Bank Fee`;
+        mState.feeBreakdown.rent += fee;
       } else if (category.isThirdPartyEd) {
         fee = Math.min(Number(txn.amount) * 0.01, 3000);
         feeNote = `+ ₹${fee.toLocaleString("en-IN")} Bank Fee`;
+        mState.feeBreakdown.education += fee;
       } else if (category.isUtility && Number(txn.amount) > 50000) {
         fee = Math.min(Number(txn.amount) * 0.01, 3000);
         feeNote = `+ ₹${fee.toLocaleString("en-IN")} Bank Fee`;
+        mState.feeBreakdown.utility += fee;
       } else if (category.isFuel && Number(txn.amount) > 15000) {
         fee = Math.min(Number(txn.amount) * 0.01, 3000);
         feeNote = `+ ₹${fee.toLocaleString("en-IN")} Bank Fee`;
+        mState.feeBreakdown.fuel += fee;
       }
       mState.totalFees += fee;
 
-      // --- Rewards Processing ---
       const baseRP = category.baseEligible
         ? Math.floor(txn.amount / 150) * 5
         : 0;
@@ -461,24 +486,22 @@ export default function App() {
         earnedRP = 0;
         if (!feeNote) note = "No points for this category";
       } else if (category.smartbuy) {
-        const bonusMult = category.multiplier - 1;
-        const potentialBonus = Math.floor(txn.amount / 150) * (5 * bonusMult);
+        const potentialBonus =
+          Math.floor(txn.amount / 150) * (5 * (category.multiplier - 1));
         const allowedBonus = Math.min(
           potentialBonus,
           CAPS.SMARTBUY_BONUS_MONTHLY - mState.smartBuyBonusRP
         );
-
         mState.smartBuyBonusRP += allowedBonus;
         earnedRP = baseRP + allowedBonus;
         if (allowedBonus < potentialBonus) note = "SmartBuy Cap Reached";
       } else if (category.id === "weekend-dining") {
         if (!mState.dailyDining[dateKey]) mState.dailyDining[dateKey] = 0;
-        const diningBonus = Math.floor(txn.amount / 150) * 5; // Extra 1X
+        const diningBonus = Math.floor(txn.amount / 150) * 5;
         const allowedBonus = Math.min(
           diningBonus,
           CAPS.DINING_DAILY - mState.dailyDining[dateKey]
         );
-
         mState.dailyDining[dateKey] += allowedBonus;
         earnedRP = baseRP + allowedBonus;
         if (allowedBonus < diningBonus) note = "Daily Dining Cap Reached";
@@ -486,15 +509,17 @@ export default function App() {
         const capKey = category.rewardCapKey;
         const limit = CAPS[capKey];
         const allowed = Math.min(baseRP, limit - mState[capKey]);
-
         mState[capKey] += allowed;
         earnedRP = allowed;
         if (allowed < baseRP) note = "Monthly Limit Reached";
       } else {
-        earnedRP = baseRP; // Regular eligible
+        earnedRP = baseRP;
       }
 
       mState.totalEarnedRP += earnedRP;
+      lifetimeEarnedRP[txn.cardHolder] =
+        (lifetimeEarnedRP[txn.cardHolder] || 0) + earnedRP;
+
       processedTxns.push({
         ...txn,
         earnedRP,
@@ -505,32 +530,63 @@ export default function App() {
       });
     });
 
-    return { processedTxns: processedTxns.reverse(), monthlyState };
+    return {
+      processedTxns: processedTxns.reverse(),
+      monthlyState,
+      lifetimeEarnedRP,
+    };
   }, [transactions]);
+
+  const rewardsBalance = useMemo(() => {
+    const balances = {};
+    cardholders.forEach(
+      (h) =>
+        (balances[h] = {
+          earned: processedData.lifetimeEarnedRP[h] || 0,
+          adjustments: 0,
+          redemptions: 0,
+        })
+    );
+
+    rewardsLog.forEach((log) => {
+      if (!balances[log.cardHolder])
+        balances[log.cardHolder] = {
+          earned: 0,
+          adjustments: 0,
+          redemptions: 0,
+        };
+      if (log.type === "adjustment")
+        balances[log.cardHolder].adjustments += Number(log.points);
+      if (log.type === "redemption")
+        balances[log.cardHolder].redemptions += Number(log.points);
+    });
+
+    Object.keys(balances).forEach((h) => {
+      balances[h].available =
+        balances[h].earned + balances[h].adjustments - balances[h].redemptions;
+    });
+
+    return balances;
+  }, [processedData.lifetimeEarnedRP, rewardsLog, cardholders]);
 
   const monthKey = `${selYear}-${String(selMonth).padStart(2, "0")}`;
 
   const quarterStats = useMemo(() => {
     const quarter = Math.ceil(selMonth / 3);
     const startMonth = (quarter - 1) * 3 + 1;
-    const monthsInQuarter = [
+    let quarterSpend = 0;
+    [
       `${selYear}-${String(startMonth).padStart(2, "0")}`,
       `${selYear}-${String(startMonth + 1).padStart(2, "0")}`,
       `${selYear}-${String(startMonth + 2).padStart(2, "0")}`,
-    ];
-
-    let quarterSpend = 0;
-    monthsInQuarter.forEach((m) => {
+    ].forEach((m) => {
       if (processedData.monthlyState[m]) {
-        if (filterHolder === "All") {
-          quarterSpend += processedData.monthlyState[m].totalSpend;
-        } else {
-          quarterSpend +=
-            processedData.monthlyState[m].cardholderSpends[filterHolder] || 0;
-        }
+        quarterSpend +=
+          filterHolder === "All"
+            ? processedData.monthlyState[m].totalSpend
+            : processedData.monthlyState[m].cardholderSpends[filterHolder] || 0;
       }
     });
-
     return {
       spend: quarterSpend,
       target: CAPS.QUARTERLY_MILESTONE,
@@ -540,16 +596,13 @@ export default function App() {
   }, [selMonth, selYear, filterHolder, processedData.monthlyState]);
 
   const annualStats = useMemo(() => {
-    // Annual runs June 1st to May 31st (Because card was issued June 1st, 2026)
     let startYear = selYear;
-    if (selMonth < 6) startYear -= 1; // If viewing Jan-May, annual cycle started last June
-
-    let annualSpend = 0;
-    let annualRP = 0;
-
+    if (selMonth < 6) startYear -= 1;
+    let annualSpend = 0,
+      annualRP = 0;
     for (let m = 0; m < 12; m++) {
-      let checkMonth = 6 + m; // Starts at June
-      let checkYear = startYear;
+      let checkMonth = 6 + m,
+        checkYear = startYear;
       if (checkMonth > 12) {
         checkMonth -= 12;
         checkYear += 1;
@@ -563,12 +616,10 @@ export default function App() {
           annualSpend +=
             processedData.monthlyState[mKey].cardholderSpends[filterHolder] ||
             0;
-          // For RP, we keep family level display
           annualRP += processedData.monthlyState[mKey].totalEarnedRP;
         }
       }
     }
-
     return {
       spend: annualSpend,
       earnedRP: annualRP,
@@ -583,11 +634,11 @@ export default function App() {
     utilityMonthlyRewardCap: 0,
     telecomMonthlyRewardCap: 0,
     insuranceMonthlyRewardCap: 0,
-    upiMonthlyRewardCap: 0,
     smartBuyBonusRP: 0,
     totalSpend: 0,
     totalEarnedRP: 0,
     totalFees: 0,
+    feeBreakdown: { rent: 0, utility: 0, fuel: 0, education: 0 },
     cardholderSpends: {},
   };
 
@@ -597,32 +648,96 @@ export default function App() {
     const txnData = {
       ...newTxn,
       amount: Number(newTxn.amount),
-      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
-    await addDoc(collection(db, "family_transactions"), txnData);
+    if (isEditing) {
+      await updateDoc(doc(db, "family_transactions", editTxnId), txnData);
+    } else {
+      txnData.createdAt = new Date().toISOString();
+      await addDoc(collection(db, "family_transactions"), txnData);
+    }
 
     setShowAddModal(false);
-    setNewTxn({ ...newTxn, amount: "" });
+    setNewTxn(initialTxnState);
+  };
+
+  const openEditModal = (txn) => {
+    setNewTxn({
+      date: txn.date,
+      amount: txn.amount,
+      categoryId: txn.categoryId,
+      cardHolder: txn.cardHolder,
+      remarks: txn.remarks || "",
+    });
+    setEditTxnId(txn.id);
+    setIsEditing(true);
+    setShowAddModal(true);
   };
 
   const handleDelete = async (id) => {
-    await deleteDoc(doc(db, "family_transactions", id));
+    if (window.confirm("Are you sure you want to delete this transaction?")) {
+      await deleteDoc(doc(db, "family_transactions", id));
+    }
+  };
+
+  const handleAddReward = async (e) => {
+    e.preventDefault();
+    if (!newReward.points || isNaN(newReward.points) || newReward.points <= 0)
+      return;
+    const rewardData = {
+      ...newReward,
+      points: Number(newReward.points),
+      createdAt: new Date().toISOString(),
+    };
+    await addDoc(collection(db, "family_rewards"), rewardData);
+    setShowRewardModal(false);
+    setNewReward({ ...newReward, points: "", remarks: "" });
+  };
+
+  const handleDeleteReward = async (id) => {
+    if (window.confirm("Delete this points record?")) {
+      await deleteDoc(doc(db, "family_rewards", id));
+    }
   };
 
   const handleSaveSettings = async () => {
+    const changedNames = [];
+    cardholders.forEach((oldName, i) => {
+      if (oldName !== editHolders[i])
+        changedNames.push({ old: oldName, new: editHolders[i] });
+    });
+
     await setDoc(
       doc(db, "family_settings", "profile"),
       { cardholders: editHolders },
       { merge: true }
     );
+
+    for (const change of changedNames) {
+      const matchingTxns = transactions.filter(
+        (t) => t.cardHolder === change.old
+      );
+      for (const t of matchingTxns) {
+        await updateDoc(doc(db, "family_transactions", t.id), {
+          cardHolder: change.new,
+        });
+      }
+      const matchingRewards = rewardsLog.filter(
+        (r) => r.cardHolder === change.old
+      );
+      for (const r of matchingRewards) {
+        await updateDoc(doc(db, "family_rewards", r.id), {
+          cardHolder: change.new,
+        });
+      }
+    }
     setShowSettingsModal(false);
   };
 
   if (!user) {
     return (
-      <div className="flex flex-col h-screen items-center justify-center bg-zinc-900 font-sans p-4 relative overflow-hidden">
-        {/* Subtle dot matrix background to add texture without heavy images */}
+      <div className="flex h-screen items-center justify-center bg-zinc-900 font-sans p-4 relative overflow-hidden">
         <div
           className="absolute inset-0 opacity-10 pointer-events-none"
           style={{
@@ -631,16 +746,14 @@ export default function App() {
             backgroundSize: "24px 24px",
           }}
         ></div>
-
-        <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md text-center relative z-10">
-          <div className="bg-zinc-900 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-amber-500 shadow-inner">
-            <CreditCard size={32} />
+        <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm text-center relative z-10">
+          <div className="bg-amber-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-600">
+            <Lock size={32} />
           </div>
-          <h2 className="text-2xl font-black text-zinc-900 mb-2 uppercase tracking-wide">
-            HDFC Diners Black Metal <br />
-            <span className="text-amber-500">Spends Tracker</span>
+          <h2 className="text-2xl font-bold text-zinc-900 mb-2">
+            HDFC Diners Black Metal Spends Tracker
           </h2>
-          <p className="text-zinc-500 text-sm mb-8 font-medium">
+          <p className="text-zinc-500 text-sm mb-6">
             Enter your email and password to access the tracker.
           </p>
           <form onSubmit={handleLogin} className="space-y-4">
@@ -648,7 +761,7 @@ export default function App() {
               type="email"
               value={emailInput}
               onChange={(e) => setEmailInput(e.target.value)}
-              placeholder="Authorized Email ID"
+              placeholder="Email ID"
               className="w-full text-center text-lg font-medium border border-zinc-200 rounded-xl p-4 focus:ring-2 focus:ring-amber-500 outline-none bg-zinc-50"
               autoFocus
             />
@@ -656,24 +769,20 @@ export default function App() {
               type="password"
               value={passwordInput}
               onChange={(e) => setPasswordInput(e.target.value)}
-              placeholder="Secure Password"
+              placeholder="Password"
               className="w-full text-center text-lg font-medium border border-zinc-200 rounded-xl p-4 focus:ring-2 focus:ring-amber-500 outline-none bg-zinc-50"
             />
             {authError && (
-              <p className="text-red-500 text-sm font-bold bg-red-50 p-2 rounded-lg">
-                {authError}
-              </p>
+              <p className="text-red-500 text-sm font-medium">{authError}</p>
             )}
             <button
               type="submit"
-              className="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-bold py-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 mt-2"
+              className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 rounded-xl shadow-sm transition-colors"
             >
-              <Lock size={18} className="text-amber-500" /> Secure Login
+              Secure Login
             </button>
           </form>
         </div>
-
-        {/* Custom Footnote */}
         <div className="mt-8 text-zinc-500 text-xs font-medium relative z-10 flex items-center gap-2">
           <ShieldAlert size={14} /> Contact Rohit Chopra for any issues or
           access requirement
@@ -682,7 +791,6 @@ export default function App() {
     );
   }
 
-  // Filter Logic for Views
   const filteredTxns = processedData.processedTxns.filter(
     (t) =>
       t.date.startsWith(monthKey) &&
@@ -692,12 +800,8 @@ export default function App() {
     filterHolder === "All"
       ? currentStats.totalSpend
       : currentStats.cardholderSpends[filterHolder] || 0;
-
-  // --- Policy Trigger Logic ---
-  // Calculates how many months have passed since June 2026
-  const monthsSinceUpdate =
-    (new Date().getFullYear() - 2026) * 12 + (new Date().getMonth() - 5);
-  const isPolicyUpdateDue = monthsSinceUpdate >= 6;
+  const isPolicyUpdateDue =
+    (new Date().getFullYear() - 2026) * 12 + (new Date().getMonth() - 5) >= 6;
 
   if (loading)
     return (
@@ -709,9 +813,9 @@ export default function App() {
     );
 
   return (
-    <div className="flex h-screen bg-zinc-100 font-sans text-zinc-800">
-      {/* Sidebar */}
-      <aside className="w-64 bg-zinc-900 text-zinc-100 flex flex-col transition-all">
+    <div className="flex flex-col md:flex-row h-screen bg-zinc-100 font-sans text-zinc-800">
+      {/* Desktop Sidebar (Hidden on Mobile) */}
+      <aside className="hidden md:flex w-64 bg-zinc-900 text-zinc-100 flex-col transition-all">
         <div className="p-6">
           <div className="flex items-center gap-3 text-amber-500 mb-2">
             <CreditCard size={28} />
@@ -723,7 +827,6 @@ export default function App() {
             REWARDS TRACKER
           </p>
         </div>
-
         <nav className="flex-1 px-4 space-y-2 mt-4">
           <button
             onClick={() => setActiveTab("dashboard")}
@@ -746,8 +849,18 @@ export default function App() {
           >
             <List size={20} /> <span className="font-medium">Transactions</span>
           </button>
+          <button
+            onClick={() => setActiveTab("rewards")}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+              activeTab === "rewards"
+                ? "bg-amber-500/10 text-amber-500"
+                : "hover:bg-zinc-800 text-zinc-400"
+            }`}
+          >
+            <Gift size={20} />{" "}
+            <span className="font-medium">Rewards Ledger</span>
+          </button>
         </nav>
-
         <div className="p-4 space-y-2">
           <button
             onClick={() => setShowPolicyModal(true)}
@@ -771,33 +884,68 @@ export default function App() {
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-500 hover:bg-zinc-800 transition-colors text-xs text-left mt-4 border border-zinc-800"
           >
-            <Lock size={14} /> Lock Tracker (Logout)
+            <Lock size={14} /> Logout
           </button>
         </div>
       </aside>
 
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 w-full bg-zinc-900 border-t border-zinc-800 z-40 flex justify-around p-3 pb-safe shadow-2xl">
+        <button
+          onClick={() => setActiveTab("dashboard")}
+          className={`flex flex-col items-center gap-1 ${
+            activeTab === "dashboard" ? "text-amber-500" : "text-zinc-500"
+          }`}
+        >
+          <LayoutDashboard size={20} />
+          <span className="text-[10px] font-medium">Dashboard</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("logs")}
+          className={`flex flex-col items-center gap-1 ${
+            activeTab === "logs" ? "text-amber-500" : "text-zinc-500"
+          }`}
+        >
+          <List size={20} />
+          <span className="text-[10px] font-medium">Transactions</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("rewards")}
+          className={`flex flex-col items-center gap-1 ${
+            activeTab === "rewards" ? "text-amber-500" : "text-zinc-500"
+          }`}
+        >
+          <Gift size={20} />
+          <span className="text-[10px] font-medium">Rewards</span>
+        </button>
+        <button
+          onClick={() => setShowSettingsModal(true)}
+          className="flex flex-col items-center gap-1 text-zinc-500"
+        >
+          <Settings size={20} />
+          <span className="text-[10px] font-medium">Settings</span>
+        </button>
+      </nav>
+
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-8 max-w-6xl mx-auto">
-          {/* Header & Controls */}
+      <main className="flex-1 overflow-y-auto pb-24 md:pb-0">
+        <div className="p-4 md:p-8 max-w-6xl mx-auto">
           <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
               <h2 className="text-2xl font-bold text-zinc-900">
-                Family Overview
+                {filterHolder === "All" ? "Family" : filterHolder} Overview
               </h2>
               <p className="text-zinc-500 text-sm mt-1">
                 Track family spends and maximize returns.
               </p>
             </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Cardholder Filter */}
-              <div className="bg-white border border-zinc-200 px-3 py-2 rounded-xl flex items-center gap-2 shadow-sm relative cursor-pointer">
+            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+              <div className="bg-white border border-zinc-200 px-3 py-2 rounded-xl flex items-center gap-2 shadow-sm relative flex-1 md:flex-none">
                 <Filter size={16} className="text-amber-500" />
                 <select
                   value={filterHolder}
                   onChange={(e) => setFilterHolder(e.target.value)}
-                  className="bg-transparent border-none focus:outline-none text-zinc-800 text-sm font-medium pr-4 appearance-none outline-none cursor-pointer"
+                  className="bg-transparent border-none focus:outline-none text-zinc-800 text-sm font-medium pr-4 appearance-none w-full cursor-pointer"
                 >
                   <option value="All">All Family Spends</option>
                   {cardholders.map((c) => (
@@ -811,13 +959,11 @@ export default function App() {
                   size={14}
                 />
               </div>
-
-              {/* Month/Year Fix Dropdowns */}
-              <div className="bg-white border border-zinc-200 px-3 py-2 rounded-xl flex items-center gap-2 shadow-sm">
+              <div className="bg-white border border-zinc-200 px-3 py-2 rounded-xl flex items-center gap-1 shadow-sm flex-1 md:flex-none justify-center">
                 <select
                   value={selMonth}
                   onChange={(e) => setSelMonth(Number(e.target.value))}
-                  className="bg-transparent text-sm font-bold text-zinc-800 outline-none appearance-none pr-2 cursor-pointer"
+                  className="bg-transparent text-sm font-bold text-zinc-800 outline-none appearance-none cursor-pointer"
                 >
                   {MONTHS.map((m, i) => (
                     <option key={m} value={i + 1}>
@@ -838,67 +984,50 @@ export default function App() {
                   ))}
                 </select>
               </div>
-
               <button
-                onClick={() => setShowAddModal(true)}
-                className="bg-zinc-900 hover:bg-zinc-800 text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-colors shadow-sm text-sm"
+                onClick={() => {
+                  setIsEditing(false);
+                  setNewTxn(initialTxnState);
+                  setShowAddModal(true);
+                }}
+                className="bg-zinc-900 hover:bg-zinc-800 text-white px-4 py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 shadow-sm text-sm w-full md:w-auto"
               >
                 <Plus size={16} /> Add Spend
               </button>
             </div>
           </header>
 
-          {/* Surcharges Warning Banner */}
-          {currentStats.totalFees > 0 && filterHolder === "All" && (
-            <div className="mb-6 bg-red-50 text-red-800 p-4 rounded-xl text-sm flex items-start gap-3 border border-red-200">
-              <AlertCircle size={18} className="shrink-0 mt-0.5 text-red-600" />
-              <div>
-                <strong>HDFC Processing Fees Detected:</strong> The family has
-                incurred approx{" "}
-                <strong>
-                  ₹{currentStats.totalFees.toLocaleString("en-IN")}
-                </strong>{" "}
-                in bank fees this month based on the 1% rule for Rent, Utility
-                (&gt;50k), Fuel (&gt;15k), or Third-party Education apps.
-              </div>
-            </div>
-          )}
-
-          {/* Dashboard View */}
-          {activeTab === "dashboard" ? (
+          {activeTab === "dashboard" && (
             <div className="space-y-6">
-              {/* Cardholder Spends Breakdown (Moved to Top) */}
-              <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
-                <div className="flex items-center justify-between mb-6">
+              <div className="bg-white p-4 md:p-6 rounded-2xl border border-zinc-200 shadow-sm">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                   <h3 className="text-lg font-bold text-zinc-900">
                     Total Spend ({MONTHS[selMonth - 1]} {selYear})
                   </h3>
-                  <div className="text-right">
-                    <div className="text-2xl font-black text-zinc-800">
+                  <div className="text-left md:text-right">
+                    <div className="text-2xl md:text-3xl font-black text-zinc-800">
                       ₹ {displayTotalSpend.toLocaleString("en-IN")}
                     </div>
-                    {/* Monthly RP Added Here */}
                     <div className="text-sm font-bold text-green-600">
                       +
                       {filterHolder === "All"
                         ? currentStats.totalEarnedRP.toLocaleString("en-IN")
-                        : "Family Calculation"}{" "}
+                        : "Family Calc"}{" "}
                       RP Earned This Month
                     </div>
                   </div>
                 </div>
-
                 {filterHolder === "All" && (
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 pt-2 border-t border-zinc-100">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 pt-4 border-t border-zinc-100">
                     {cardholders.map((holder) => (
                       <div
                         key={holder}
-                        className="bg-zinc-50 p-4 rounded-xl border border-zinc-100"
+                        className="bg-zinc-50 p-3 rounded-xl border border-zinc-100"
                       >
-                        <div className="text-xs text-zinc-500 font-medium mb-1">
+                        <div className="text-xs text-zinc-500 font-medium mb-1 truncate">
                           {holder}
                         </div>
-                        <div className="text-lg font-bold text-zinc-800">
+                        <div className="text-base font-bold text-zinc-800">
                           ₹{" "}
                           {(
                             currentStats.cardholderSpends[holder] || 0
@@ -911,12 +1040,11 @@ export default function App() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Total Spends - Annual Focus */}
-                <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm flex flex-col justify-center relative overflow-hidden">
+                <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm flex flex-col justify-center">
                   <div className="text-zinc-500 text-sm font-medium mb-2 flex justify-between items-center">
                     <span>{annualStats.label}</span>
                     <span
-                      className={`text-xs font-bold px-2 py-1 rounded-md ${
+                      className={`text-[10px] font-bold px-2 py-1 rounded-md ${
                         annualStats.progress >= 100
                           ? "text-green-700 bg-green-100"
                           : "text-emerald-700 bg-emerald-50"
@@ -927,23 +1055,22 @@ export default function App() {
                   </div>
                   <div className="text-2xl font-bold text-zinc-900 mb-3">
                     ₹ {annualStats.spend.toLocaleString("en-IN")}
-                    <span className="text-sm font-normal text-zinc-400 ml-1">
+                    <span className="text-xs font-normal text-zinc-400 ml-1">
                       / 8L
                     </span>
                   </div>
-                  <div className="w-full bg-zinc-100 rounded-full h-2.5 relative">
+                  <div className="w-full bg-zinc-100 rounded-full h-2 relative">
                     <div
                       className={`${
                         annualStats.progress >= 100
                           ? "bg-green-500"
                           : "bg-amber-500"
-                      } h-2.5 rounded-full transition-all`}
+                      } h-2 rounded-full transition-all`}
                       style={{ width: `${annualStats.progress}%` }}
                     ></div>
                   </div>
                 </div>
 
-                {/* Quarterly Milestone */}
                 <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm flex flex-col justify-center relative overflow-hidden">
                   <div className="absolute top-0 right-0 p-4 opacity-10">
                     <TrendingUp size={64} />
@@ -951,69 +1078,142 @@ export default function App() {
                   <div className="text-zinc-500 text-sm font-medium mb-2 flex justify-between items-center relative z-10">
                     <span>{quarterStats.label} Milestone</span>
                     <span
-                      className={`text-xs font-bold px-2 py-1 rounded-md ${
+                      className={`text-[10px] font-bold px-2 py-1 rounded-md ${
                         quarterStats.progress >= 100
                           ? "text-green-700 bg-green-100"
                           : "text-amber-700 bg-amber-50"
                       }`}
                     >
-                      10K RP Bonus
+                      10K RP
                     </span>
                   </div>
                   <div className="text-2xl font-bold text-zinc-900 relative z-10 mb-3">
                     ₹ {quarterStats.spend.toLocaleString("en-IN")}
-                    <span className="text-sm font-normal text-zinc-400 ml-1">
+                    <span className="text-xs font-normal text-zinc-400 ml-1">
                       / 4L
                     </span>
                   </div>
-                  <div className="w-full bg-zinc-100 rounded-full h-2.5 relative z-10">
+                  <div className="w-full bg-zinc-100 rounded-full h-2 relative z-10">
                     <div
                       className={`${
                         quarterStats.progress >= 100
                           ? "bg-green-500"
                           : "bg-amber-500"
-                      } h-2.5 rounded-full transition-all`}
+                      } h-2 rounded-full transition-all`}
                       style={{ width: `${quarterStats.progress}%` }}
                     ></div>
                   </div>
                 </div>
 
-                {/* ANNUAL Points Earned */}
-                <div className="bg-gradient-to-br from-zinc-800 to-zinc-900 p-6 rounded-2xl shadow-sm text-white flex flex-col justify-center relative">
-                  <div className="font-medium mb-1 text-sm flex items-center gap-2 opacity-90">
-                    <Award size={16} /> Annual RP Earned
+                {filterHolder === "All" ? (
+                  <div className="bg-gradient-to-br from-zinc-800 to-zinc-900 p-6 rounded-2xl shadow-sm text-white flex flex-col justify-center">
+                    <div className="font-medium mb-1 text-sm flex items-center gap-2 opacity-90">
+                      <Award size={16} /> Annual RP Earned
+                    </div>
+                    <div className="text-3xl font-bold text-amber-500">
+                      {annualStats.earnedRP.toLocaleString("en-IN")}
+                      <span className="text-sm opacity-80 font-medium ml-1 text-white">
+                        RP
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-zinc-400 mt-2 font-medium">
+                      Cycle: Jun 2026 - May 2027
+                    </div>
                   </div>
-                  <div className="text-3xl font-bold text-amber-500">
-                    {filterHolder === "All"
-                      ? annualStats.earnedRP.toLocaleString("en-IN")
-                      : "Family View Only"}
-                    <span className="text-lg opacity-80 font-medium ml-1 text-white">
-                      RP
-                    </span>
+                ) : (
+                  <div className="bg-gradient-to-br from-amber-500 to-orange-500 p-6 rounded-2xl shadow-sm text-white flex flex-col justify-center">
+                    <div className="font-medium mb-1 text-sm flex items-center gap-2 opacity-90">
+                      <Gift size={16} /> Available Reward Points
+                    </div>
+                    <div className="text-3xl font-bold text-white">
+                      {(
+                        rewardsBalance[filterHolder]?.available || 0
+                      ).toLocaleString("en-IN")}
+                      <span className="text-sm opacity-80 font-medium ml-1 text-white">
+                        RP
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-amber-100 mt-2 font-medium">
+                      Includes manual adjustments
+                    </div>
                   </div>
-                  <div className="text-xs text-zinc-400 mt-2 font-medium">
-                    Cycle: Jun 2026 - May 2027
+                )}
+              </div>
+
+              {/* HDFC Bank Fees Tracker Card */}
+              <div className="bg-white p-4 md:p-6 rounded-2xl border border-zinc-200 shadow-sm">
+                <h3 className="text-base md:text-lg font-bold text-zinc-900 mb-6 flex items-center gap-2">
+                  <AlertCircle className="text-red-500" size={18} /> Bank
+                  Surcharges & Fees (1%)
+                  <span className="text-[10px] font-normal text-zinc-500 ml-1 hidden md:inline">
+                    (Capped at ₹3,000 per txn)
+                  </span>
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <div className="bg-red-50 p-4 rounded-xl border border-red-100 col-span-2 md:col-span-1">
+                    <div className="text-xs text-red-600 font-bold mb-1 uppercase tracking-wider">
+                      Total Fees
+                    </div>
+                    <div className="text-xl font-black text-red-700">
+                      ₹ {currentStats.totalFees.toLocaleString("en-IN")}
+                    </div>
+                  </div>
+                  <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-100">
+                    <div className="text-xs text-zinc-500 font-medium mb-1">
+                      Rental Fees
+                    </div>
+                    <div className="text-lg font-bold text-zinc-800">
+                      ₹{" "}
+                      {(currentStats.feeBreakdown?.rent || 0).toLocaleString(
+                        "en-IN"
+                      )}
+                    </div>
+                  </div>
+                  <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-100">
+                    <div className="text-xs text-zinc-500 font-medium mb-1">
+                      Utility (&gt;50k)
+                    </div>
+                    <div className="text-lg font-bold text-zinc-800">
+                      ₹{" "}
+                      {(currentStats.feeBreakdown?.utility || 0).toLocaleString(
+                        "en-IN"
+                      )}
+                    </div>
+                  </div>
+                  <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-100">
+                    <div className="text-xs text-zinc-500 font-medium mb-1">
+                      Fuel (&gt;15k)
+                    </div>
+                    <div className="text-lg font-bold text-zinc-800">
+                      ₹{" "}
+                      {(currentStats.feeBreakdown?.fuel || 0).toLocaleString(
+                        "en-IN"
+                      )}
+                    </div>
+                  </div>
+                  <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-100">
+                    <div className="text-xs text-zinc-500 font-medium mb-1">
+                      Education
+                    </div>
+                    <div className="text-lg font-bold text-zinc-800">
+                      ₹{" "}
+                      {(
+                        currentStats.feeBreakdown?.education || 0
+                      ).toLocaleString("en-IN")}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Family Monthly Capping Status */}
-              <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
-                <h3 className="text-lg font-bold text-zinc-900 mb-6 flex items-center gap-2">
-                  <CheckCircle2 className="text-green-500" size={20} /> Family
+              <div className="bg-white p-4 md:p-6 rounded-2xl border border-zinc-200 shadow-sm">
+                <h3 className="text-base md:text-lg font-bold text-zinc-900 mb-6 flex items-center gap-2">
+                  <CheckCircle2 className="text-green-500" size={18} /> Family
                   Monthly Capping Status
-                  <span className="text-xs font-normal text-zinc-500 ml-2">
-                    (Limits reset 1st of every calendar month)
-                  </span>
                 </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-8">
-                  {/* SmartBuy */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-6">
                   <div>
-                    <div className="flex justify-between text-sm mb-2 font-medium">
-                      <span className="text-zinc-700">
-                        SmartBuy Accelerated Bonus
-                      </span>
+                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium">
+                      <span className="text-zinc-700">SmartBuy Bonus</span>
                       <span
                         className={
                           currentStats.smartBuyBonusRP >=
@@ -1026,9 +1226,9 @@ export default function App() {
                         10,000
                       </span>
                     </div>
-                    <div className="w-full bg-zinc-100 rounded-full h-2">
+                    <div className="w-full bg-zinc-100 rounded-full h-1.5">
                       <div
-                        className={`h-2 rounded-full ${
+                        className={`h-1.5 rounded-full ${
                           currentStats.smartBuyBonusRP >=
                           CAPS.SMARTBUY_BONUS_MONTHLY
                             ? "bg-red-500"
@@ -1045,10 +1245,8 @@ export default function App() {
                       ></div>
                     </div>
                   </div>
-
-                  {/* Grocery */}
                   <div>
-                    <div className="flex justify-between text-sm mb-2 font-medium">
+                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium">
                       <span className="text-zinc-700">Grocery Points</span>
                       <span
                         className={
@@ -1064,9 +1262,9 @@ export default function App() {
                         / 2,000
                       </span>
                     </div>
-                    <div className="w-full bg-zinc-100 rounded-full h-2">
+                    <div className="w-full bg-zinc-100 rounded-full h-1.5">
                       <div
-                        className={`h-2 rounded-full ${
+                        className={`h-1.5 rounded-full ${
                           currentStats.groceryMonthlyRewardCap >=
                           CAPS.groceryMonthlyRewardCap
                             ? "bg-red-500"
@@ -1083,10 +1281,8 @@ export default function App() {
                       ></div>
                     </div>
                   </div>
-
-                  {/* Telecom */}
                   <div>
-                    <div className="flex justify-between text-sm mb-2 font-medium">
+                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium">
                       <span className="text-zinc-700">Telecom Points</span>
                       <span
                         className={
@@ -1102,9 +1298,9 @@ export default function App() {
                         / 2,000
                       </span>
                     </div>
-                    <div className="w-full bg-zinc-100 rounded-full h-2">
+                    <div className="w-full bg-zinc-100 rounded-full h-1.5">
                       <div
-                        className={`h-2 rounded-full ${
+                        className={`h-1.5 rounded-full ${
                           currentStats.telecomMonthlyRewardCap >=
                           CAPS.telecomMonthlyRewardCap
                             ? "bg-red-500"
@@ -1121,10 +1317,8 @@ export default function App() {
                       ></div>
                     </div>
                   </div>
-
-                  {/* Utility */}
                   <div>
-                    <div className="flex justify-between text-sm mb-2 font-medium">
+                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium">
                       <span className="text-zinc-700">Utility Points</span>
                       <span
                         className={
@@ -1140,9 +1334,9 @@ export default function App() {
                         / 2,000
                       </span>
                     </div>
-                    <div className="w-full bg-zinc-100 rounded-full h-2">
+                    <div className="w-full bg-zinc-100 rounded-full h-1.5">
                       <div
-                        className={`h-2 rounded-full ${
+                        className={`h-1.5 rounded-full ${
                           currentStats.utilityMonthlyRewardCap >=
                           CAPS.utilityMonthlyRewardCap
                             ? "bg-red-500"
@@ -1159,10 +1353,8 @@ export default function App() {
                       ></div>
                     </div>
                   </div>
-
-                  {/* Insurance */}
                   <div>
-                    <div className="flex justify-between text-sm mb-2 font-medium">
+                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium">
                       <span className="text-zinc-700">Insurance Points</span>
                       <span
                         className={
@@ -1178,9 +1370,9 @@ export default function App() {
                         / 5,000
                       </span>
                     </div>
-                    <div className="w-full bg-zinc-100 rounded-full h-2">
+                    <div className="w-full bg-zinc-100 rounded-full h-1.5">
                       <div
-                        className={`h-2 rounded-full ${
+                        className={`h-1.5 rounded-full ${
                           currentStats.insuranceMonthlyRewardCap >=
                           CAPS.insuranceMonthlyRewardCap
                             ? "bg-red-500"
@@ -1197,48 +1389,12 @@ export default function App() {
                       ></div>
                     </div>
                   </div>
-
-                  {/* UPI */}
-                  <div>
-                    <div className="flex justify-between text-sm mb-2 font-medium">
-                      <span className="text-zinc-700">UPI Points</span>
-                      <span
-                        className={
-                          currentStats.upiMonthlyRewardCap >=
-                          CAPS.upiMonthlyRewardCap
-                            ? "text-red-500"
-                            : "text-zinc-500"
-                        }
-                      >
-                        {currentStats.upiMonthlyRewardCap.toLocaleString(
-                          "en-IN"
-                        )}{" "}
-                        / 500
-                      </span>
-                    </div>
-                    <div className="w-full bg-zinc-100 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full ${
-                          currentStats.upiMonthlyRewardCap >=
-                          CAPS.upiMonthlyRewardCap
-                            ? "bg-red-500"
-                            : "bg-teal-500"
-                        }`}
-                        style={{
-                          width: `${Math.min(
-                            (currentStats.upiMonthlyRewardCap /
-                              CAPS.upiMonthlyRewardCap) *
-                              100,
-                            100
-                          )}%`,
-                        }}
-                      ></div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
-          ) : (
+          )}
+
+          {activeTab === "logs" && (
             <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse whitespace-nowrap">
@@ -1246,7 +1402,7 @@ export default function App() {
                     <tr className="bg-zinc-50 border-b border-zinc-200 text-xs uppercase tracking-wider text-zinc-500">
                       <th className="p-4 font-medium">Date</th>
                       <th className="p-4 font-medium">Cardholder</th>
-                      <th className="p-4 font-medium">Category / Note</th>
+                      <th className="p-4 font-medium">Category & Remarks</th>
                       <th className="p-4 font-medium text-right">Amount (₹)</th>
                       <th className="p-4 font-medium text-right">Points</th>
                       <th className="p-4 font-medium text-center">Action</th>
@@ -1278,6 +1434,11 @@ export default function App() {
                           </td>
                           <td className="p-4 text-sm text-zinc-800">
                             {txn.categoryLabel}
+                            {txn.remarks && (
+                              <span className="block text-xs text-zinc-500 mt-0.5">
+                                {txn.remarks}
+                              </span>
+                            )}
                             {txn.feeNote && (
                               <span className="block text-[10px] text-red-500 mt-0.5 font-bold uppercase tracking-wider">
                                 {txn.feeNote}
@@ -1295,10 +1456,16 @@ export default function App() {
                           <td className="p-4 text-sm font-bold text-green-600 text-right">
                             +{txn.earnedRP}
                           </td>
-                          <td className="p-4 text-center">
+                          <td className="p-4 text-center flex justify-center gap-1">
+                            <button
+                              onClick={() => openEditModal(txn)}
+                              className="text-zinc-400 hover:text-blue-500 p-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                            >
+                              <Edit size={16} />
+                            </button>
                             <button
                               onClick={() => handleDelete(txn.id)}
-                              className="text-zinc-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50"
+                              className="text-zinc-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-colors"
                             >
                               <Trash2 size={16} />
                             </button>
@@ -1311,15 +1478,148 @@ export default function App() {
               </div>
             </div>
           )}
+
+          {activeTab === "rewards" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-zinc-200 shadow-sm">
+                <div>
+                  <h3 className="font-bold text-zinc-900">Rewards Ledger</h3>
+                  <p className="text-xs text-zinc-500 mt-1">
+                    Manage manual adjustments and redemptions.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowRewardModal(true)}
+                  className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm"
+                >
+                  Log Points
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {cardholders.map((holder) => (
+                  <div
+                    key={holder}
+                    className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm"
+                  >
+                    <div className="font-bold text-zinc-900 mb-4 pb-2 border-b border-zinc-100">
+                      {holder}
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between text-zinc-500">
+                        <span>Earned (All Time)</span>
+                        <span>
+                          {rewardsBalance[holder].earned.toLocaleString()} RP
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-zinc-500">
+                        <span>Manual Adjustments</span>
+                        <span className="text-green-600">
+                          +{rewardsBalance[holder].adjustments.toLocaleString()}{" "}
+                          RP
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-zinc-500">
+                        <span>Redemptions</span>
+                        <span className="text-red-500">
+                          -{rewardsBalance[holder].redemptions.toLocaleString()}{" "}
+                          RP
+                        </span>
+                      </div>
+                      <div className="flex justify-between font-bold text-zinc-900 pt-2 border-t border-zinc-100 mt-2">
+                        <span>Available Balance</span>
+                        <span className="text-amber-500">
+                          {rewardsBalance[holder].available.toLocaleString()} RP
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden mt-6">
+                <div className="p-4 bg-zinc-50 border-b border-zinc-200 font-bold text-sm text-zinc-700">
+                  Manual Points Log
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left whitespace-nowrap">
+                    <tbody className="divide-y divide-zinc-100">
+                      {rewardsLog.length === 0 ? (
+                        <tr>
+                          <td className="p-6 text-center text-sm text-zinc-500">
+                            No manual points logged yet.
+                          </td>
+                        </tr>
+                      ) : (
+                        rewardsLog
+                          .sort((a, b) => new Date(b.date) - new Date(a.date))
+                          .map((log) => (
+                            <tr key={log.id} className="hover:bg-zinc-50">
+                              <td className="p-4 text-sm text-zinc-500 w-32">
+                                {formatDate(log.date)}
+                              </td>
+                              <td className="p-4 text-sm font-medium">
+                                {log.cardHolder}
+                              </td>
+                              <td className="p-4 text-sm">
+                                <span
+                                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-bold ${
+                                    log.type === "adjustment"
+                                      ? "bg-green-100 text-green-700"
+                                      : "bg-red-100 text-red-700"
+                                  }`}
+                                >
+                                  {log.type === "adjustment" ? (
+                                    <PlusCircle size={12} />
+                                  ) : (
+                                    <MinusCircle size={12} />
+                                  )}{" "}
+                                  {log.type.toUpperCase()}
+                                </span>
+                                {log.remarks && (
+                                  <span className="ml-2 text-zinc-500">
+                                    {log.remarks}
+                                  </span>
+                                )}
+                              </td>
+                              <td
+                                className={`p-4 text-sm font-bold text-right ${
+                                  log.type === "adjustment"
+                                    ? "text-green-600"
+                                    : "text-red-500"
+                                }`}
+                              >
+                                {log.type === "adjustment" ? "+" : "-"}
+                                {log.points.toLocaleString()}
+                              </td>
+                              <td className="p-4 text-center w-16">
+                                <button
+                                  onClick={() => handleDeleteReward(log.id)}
+                                  className="text-zinc-400 hover:text-red-500"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 
-      {}
+      {/* Add/Edit Transaction Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-zinc-100 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-zinc-900">Log Spend</h3>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-screen overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+            <div className="sticky top-0 bg-white z-10 p-5 border-b border-zinc-100 flex justify-between items-center">
+              <h3 className="text-lg font-bold text-zinc-900">
+                {isEditing ? "Edit Spend" : "Log Spend"}
+              </h3>
               <button
                 onClick={() => setShowAddModal(false)}
                 className="text-zinc-400 hover:text-zinc-600"
@@ -1327,23 +1627,41 @@ export default function App() {
                 ✕
               </button>
             </div>
-            <form onSubmit={handleAddTransaction} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1.5">
-                  Date
-                </label>
-                <input
-                  type="date"
-                  required
-                  value={newTxn.date}
-                  onChange={(e) =>
-                    setNewTxn({ ...newTxn, date: e.target.value })
-                  }
-                  className="w-full border border-zinc-200 rounded-xl p-3 focus:ring-2 focus:ring-amber-500 outline-none"
-                />
+            <form onSubmit={handleAddTransaction} className="p-5 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={newTxn.date}
+                    onChange={(e) =>
+                      setNewTxn({ ...newTxn, date: e.target.value })
+                    }
+                    className="w-full border border-zinc-200 rounded-xl p-3 focus:ring-2 focus:ring-amber-500 outline-none text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">
+                    Amount (₹)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    placeholder="5000"
+                    value={newTxn.amount}
+                    onChange={(e) =>
+                      setNewTxn({ ...newTxn, amount: e.target.value })
+                    }
+                    className="w-full border border-zinc-200 rounded-xl p-3 focus:ring-2 focus:ring-amber-500 outline-none text-sm"
+                  />
+                </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1.5">
+                <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">
                   Cardholder
                 </label>
                 <div className="relative">
@@ -1352,7 +1670,7 @@ export default function App() {
                     onChange={(e) =>
                       setNewTxn({ ...newTxn, cardHolder: e.target.value })
                     }
-                    className="w-full border border-zinc-200 rounded-xl p-3 appearance-none focus:ring-2 focus:ring-amber-500 outline-none bg-white"
+                    className="w-full border border-zinc-200 rounded-xl p-3 appearance-none focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm"
                   >
                     {cardholders.map((h) => (
                       <option key={h} value={h}>
@@ -1367,23 +1685,7 @@ export default function App() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1.5">
-                  Amount (₹)
-                </label>
-                <input
-                  type="number"
-                  required
-                  min="1"
-                  placeholder="e.g. 5000"
-                  value={newTxn.amount}
-                  onChange={(e) =>
-                    setNewTxn({ ...newTxn, amount: e.target.value })
-                  }
-                  className="w-full border border-zinc-200 rounded-xl p-3 focus:ring-2 focus:ring-amber-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1.5">
+                <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">
                   Category
                 </label>
                 <div className="relative">
@@ -1406,19 +1708,37 @@ export default function App() {
                   />
                 </div>
               </div>
-              <div className="pt-4 flex gap-3">
+              <div>
+                <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">
+                  Remarks / Refund Note (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., Amazon Shopping, Partial Refund..."
+                  value={newTxn.remarks}
+                  onChange={(e) =>
+                    setNewTxn({ ...newTxn, remarks: e.target.value })
+                  }
+                  className="w-full border border-zinc-200 rounded-xl p-3 focus:ring-2 focus:ring-amber-500 outline-none text-sm"
+                />
+                <p className="text-[10px] text-zinc-400 mt-1">
+                  If handling a refund, edit the original transaction amount
+                  down to the net spend to perfectly adjust monthly caps.
+                </p>
+              </div>
+              <div className="pt-2 flex gap-3">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="flex-1 px-4 py-3 border border-zinc-200 text-zinc-700 font-medium rounded-xl hover:bg-zinc-50"
+                  className="flex-1 px-4 py-3 border border-zinc-200 text-zinc-700 font-bold text-sm rounded-xl hover:bg-zinc-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-3 bg-zinc-900 text-white font-medium rounded-xl hover:bg-zinc-800"
+                  className="flex-1 px-4 py-3 bg-zinc-900 text-white font-bold text-sm rounded-xl hover:bg-zinc-800"
                 >
-                  Save
+                  {isEditing ? "Save Changes" : "Save Spend"}
                 </button>
               </div>
             </form>
@@ -1426,11 +1746,112 @@ export default function App() {
         </div>
       )}
 
-      {}
+      {/* Add Reward Points Modal */}
+      {showRewardModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-5 border-b border-zinc-100 flex justify-between items-center">
+              <h3 className="text-lg font-bold text-zinc-900">
+                Log Manual Points
+              </h3>
+              <button
+                onClick={() => setShowRewardModal(false)}
+                className="text-zinc-400 hover:text-zinc-600"
+              >
+                ✕
+              </button>
+            </div>
+            <form onSubmit={handleAddReward} className="p-5 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">
+                    Type
+                  </label>
+                  <select
+                    value={newReward.type}
+                    onChange={(e) =>
+                      setNewReward({ ...newReward, type: e.target.value })
+                    }
+                    className="w-full border border-zinc-200 rounded-xl p-3 bg-white text-sm outline-none"
+                  >
+                    <option value="adjustment">Adjustment (+)</option>
+                    <option value="redemption">Redemption (-)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">
+                    Points
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    placeholder="e.g. 500"
+                    value={newReward.points}
+                    onChange={(e) =>
+                      setNewReward({ ...newReward, points: e.target.value })
+                    }
+                    className="w-full border border-zinc-200 rounded-xl p-3 outline-none text-sm"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">
+                  Cardholder
+                </label>
+                <select
+                  value={newReward.cardHolder}
+                  onChange={(e) =>
+                    setNewReward({ ...newReward, cardHolder: e.target.value })
+                  }
+                  className="w-full border border-zinc-200 rounded-xl p-3 bg-white text-sm outline-none"
+                >
+                  {cardholders.map((h) => (
+                    <option key={h} value={h}>
+                      {h}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">
+                  Remarks
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., Missing points credited, Flight booking..."
+                  value={newReward.remarks}
+                  onChange={(e) =>
+                    setNewReward({ ...newReward, remarks: e.target.value })
+                  }
+                  className="w-full border border-zinc-200 rounded-xl p-3 outline-none text-sm"
+                />
+              </div>
+              <div className="pt-2 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowRewardModal(false)}
+                  className="flex-1 px-4 py-3 border border-zinc-200 text-zinc-700 font-bold text-sm rounded-xl"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-3 bg-amber-500 text-white font-bold text-sm rounded-xl hover:bg-amber-600"
+                >
+                  Save Points
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Settings Modal */}
       {showSettingsModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95">
-            <div className="p-6 border-b border-zinc-100 flex justify-between items-center">
+            <div className="p-5 border-b border-zinc-100 flex justify-between items-center">
               <h3 className="text-lg font-bold text-zinc-900">
                 Manage Cardholders
               </h3>
@@ -1441,10 +1862,11 @@ export default function App() {
                 ✕
               </button>
             </div>
-            <div className="p-6 space-y-4">
-              <p className="text-sm text-zinc-500 mb-4">
-                Rename the Add-on cards so you can track your family's
-                individual spends easily.
+            <div className="p-5 space-y-4">
+              <p className="text-[11px] font-medium text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-100">
+                If you rename a cardholder here, the app will automatically
+                update all of their historical transactions so you don't lose
+                any data!
               </p>
               {editHolders.map((holder, index) => (
                 <div key={index}>
@@ -1455,24 +1877,24 @@ export default function App() {
                     type="text"
                     value={holder}
                     onChange={(e) => {
-                      const newHolders = [...editHolders];
-                      newHolders[index] = e.target.value;
-                      setEditHolders(newHolders);
+                      const newH = [...editHolders];
+                      newH[index] = e.target.value;
+                      setEditHolders(newH);
                     }}
-                    className="w-full border border-zinc-200 rounded-xl p-3 focus:ring-2 focus:ring-amber-500 outline-none font-medium"
+                    className="w-full border border-zinc-200 rounded-xl p-3 focus:ring-2 focus:ring-amber-500 outline-none font-medium text-sm"
                   />
                 </div>
               ))}
-              <div className="pt-4 flex gap-3">
+              <div className="pt-2 flex gap-3">
                 <button
                   onClick={() => setShowSettingsModal(false)}
-                  className="flex-1 px-4 py-3 border border-zinc-200 text-zinc-700 font-medium rounded-xl hover:bg-zinc-50"
+                  className="flex-1 px-4 py-3 border border-zinc-200 text-zinc-700 font-bold text-sm rounded-xl hover:bg-zinc-50"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSaveSettings}
-                  className="flex-1 px-4 py-3 bg-amber-500 text-white font-medium rounded-xl hover:bg-amber-600 shadow-sm"
+                  className="flex-1 px-4 py-3 bg-zinc-900 text-white font-bold text-sm rounded-xl hover:bg-zinc-800"
                 >
                   Save Names
                 </button>
@@ -1482,11 +1904,11 @@ export default function App() {
         </div>
       )}
 
-      {}
+      {/* Policy Modal */}
       {showPolicyModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95">
-            <div className="p-6 border-b border-zinc-100 flex justify-between items-center">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-screen flex flex-col animate-in fade-in zoom-in-95">
+            <div className="p-5 border-b border-zinc-100 flex justify-between items-center">
               <h3 className="text-lg font-bold text-zinc-900 flex items-center gap-2">
                 <BookOpen size={20} className="text-amber-500" /> Official HDFC
                 Policies
@@ -1498,8 +1920,7 @@ export default function App() {
                 ✕
               </button>
             </div>
-
-            <div className="p-6 max-h-[70vh] overflow-y-auto space-y-6">
+            <div className="p-5 overflow-y-auto space-y-5">
               {isPolicyUpdateDue ? (
                 <div className="bg-amber-50 text-amber-800 p-4 rounded-xl text-sm flex items-start gap-3 border border-amber-200">
                   <ShieldAlert
@@ -1510,8 +1931,7 @@ export default function App() {
                     <strong>Policy Verification Due!</strong> It has been over 6
                     months since this app's rules were locked (June 2026).
                     Please open the links below to verify if HDFC has changed
-                    any multipliers or caps. If they have, reach out to Gemini
-                    to update the app logic!
+                    any caps.
                   </div>
                 </div>
               ) : (
@@ -1522,137 +1942,52 @@ export default function App() {
                   />
                   <div>
                     <strong>Rules are up to date.</strong> This tracker is
-                    locked to the HDFC rules published in June 2026. An alert
-                    will appear here automatically after 6 months to re-verify
-                    the links below.
+                    locked to the HDFC rules published in June 2026.
                   </div>
                 </div>
               )}
-
-              <div className="space-y-3">
-                <h4 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-2">
-                  Source Documents
-                </h4>
-
-                <a
-                  href="https://www.hdfc.bank.in/content/dam/hdfcbankpws/in/en/personal-banking/discover-products/cards/credit-cards/personal-mitc/mitc-in-english.pdf"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-between p-3 rounded-xl border border-zinc-200 hover:border-amber-500 hover:bg-amber-50 transition-colors group"
-                >
-                  <div>
-                    <div className="text-sm font-bold text-zinc-800 group-hover:text-amber-700">
-                      HDFC Bank MITC
+              <div className="space-y-2">
+                {[
+                  {
+                    title: "HDFC Bank MITC",
+                    sub: "Baseline: Updated 27 May 2026",
+                    link: "https://www.hdfc.bank.in/content/dam/hdfcbankpws/in/en/personal-banking/discover-products/cards/credit-cards/personal-mitc/mitc-in-english.pdf",
+                  },
+                  {
+                    title: "Diners Black Metal T&C",
+                    sub: "Baseline: 1 June 2026",
+                    link: "https://www.hdfc.bank.in/content/dam/hdfcbankpws/in/en/personal-banking/discover-products/cards/credit-cards/diners-club-black-metal-edition-credit-card/diners-club-metal-tandc.pdf",
+                  },
+                  {
+                    title: "SmartBuy Core Benefit Offer",
+                    sub: "10X/5X/3X Multiplier Validations",
+                    link: "https://offers.smartbuy.hdfc.bank.in/offer_details/smartbuy/15282",
+                  },
+                  {
+                    title: "HDFC SMS Communication Charges",
+                    sub: "Validates the 1% fee on Rent & Utilities",
+                    link: "https://v.hdfc.bank.in/htdocs/common/sms-communication.html",
+                  },
+                ].map((doc) => (
+                  <a
+                    key={doc.title}
+                    href={doc.link}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center justify-between p-3 rounded-xl border border-zinc-200 hover:border-amber-500 hover:bg-amber-50 transition-colors group"
+                  >
+                    <div>
+                      <div className="text-sm font-bold text-zinc-800 group-hover:text-amber-700">
+                        {doc.title}
+                      </div>
+                      <div className="text-xs text-zinc-500">{doc.sub}</div>
                     </div>
-                    <div className="text-xs text-zinc-500">
-                      Baseline: Updated 27 May 2026
-                    </div>
-                  </div>
-                  <ExternalLink
-                    size={16}
-                    className="text-zinc-400 group-hover:text-amber-600"
-                  />
-                </a>
-
-                <a
-                  href="https://www.hdfc.bank.in/content/dam/hdfcbankpws/in/en/personal-banking/discover-products/cards/credit-cards/diners-club-black-metal-edition-credit-card/diners-club-metal-tandc.pdf"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-between p-3 rounded-xl border border-zinc-200 hover:border-amber-500 hover:bg-amber-50 transition-colors group"
-                >
-                  <div>
-                    <div className="text-sm font-bold text-zinc-800 group-hover:text-amber-700">
-                      Diners Black Metal T&C
-                    </div>
-                    <div className="text-xs text-zinc-500">
-                      Baseline: 1 June 2026
-                    </div>
-                  </div>
-                  <ExternalLink
-                    size={16}
-                    className="text-zinc-400 group-hover:text-amber-600"
-                  />
-                </a>
-
-                <a
-                  href="https://www.hdfc.bank.in/credit-cards/diners-club-black-metal-edition-credit-card"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-between p-3 rounded-xl border border-zinc-200 hover:border-amber-500 hover:bg-amber-50 transition-colors group"
-                >
-                  <div>
-                    <div className="text-sm font-bold text-zinc-800 group-hover:text-amber-700">
-                      Product Page
-                    </div>
-                    <div className="text-xs text-zinc-500">
-                      Official Features Overview
-                    </div>
-                  </div>
-                  <ExternalLink
-                    size={16}
-                    className="text-zinc-400 group-hover:text-amber-600"
-                  />
-                </a>
-
-                <a
-                  href="https://offers.smartbuy.hdfc.bank.in/offer_details/smartbuy/15282"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-between p-3 rounded-xl border border-zinc-200 hover:border-amber-500 hover:bg-amber-50 transition-colors group"
-                >
-                  <div>
-                    <div className="text-sm font-bold text-zinc-800 group-hover:text-amber-700">
-                      SmartBuy Core Benefit Offer
-                    </div>
-                    <div className="text-xs text-zinc-500">
-                      10X/5X/3X Multiplier Validations
-                    </div>
-                  </div>
-                  <ExternalLink
-                    size={16}
-                    className="text-zinc-400 group-hover:text-amber-600"
-                  />
-                </a>
-
-                <a
-                  href="https://offers.reward360.in/v1/savings_calculator"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-between p-3 rounded-xl border border-zinc-200 hover:border-amber-500 hover:bg-amber-50 transition-colors group"
-                >
-                  <div>
-                    <div className="text-sm font-bold text-zinc-800 group-hover:text-amber-700">
-                      Reward360 Savings Calculator
-                    </div>
-                    <div className="text-xs text-zinc-500">
-                      To double-check complex points logic
-                    </div>
-                  </div>
-                  <ExternalLink
-                    size={16}
-                    className="text-zinc-400 group-hover:text-amber-600"
-                  />
-                </a>
-
-                <a
-                  href="https://v.hdfc.bank.in/htdocs/common/sms-communication.html"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-between p-3 rounded-xl border border-zinc-200 hover:border-amber-500 hover:bg-amber-50 transition-colors group"
-                >
-                  <div>
-                    <div className="text-sm font-bold text-zinc-800 group-hover:text-amber-700">
-                      HDFC SMS Communication Charges
-                    </div>
-                    <div className="text-xs text-zinc-500">
-                      Validates the 1% fee on Rent, Utilities & Education
-                    </div>
-                  </div>
-                  <ExternalLink
-                    size={16}
-                    className="text-zinc-400 group-hover:text-amber-600"
-                  />
-                </a>
+                    <ExternalLink
+                      size={16}
+                      className="text-zinc-400 group-hover:text-amber-600"
+                    />
+                  </a>
+                ))}
               </div>
             </div>
           </div>
