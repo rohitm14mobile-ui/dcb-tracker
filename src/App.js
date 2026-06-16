@@ -1,77 +1,45 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
-  CreditCard,
-  LayoutDashboard,
-  List,
-  Plus,
-  Trash2,
-  Settings,
-  TrendingUp,
-  AlertCircle,
-  Award,
-  CheckCircle2,
-  ChevronDown,
-  Filter,
-  Lock,
-  BookOpen,
-  ExternalLink,
-  ShieldAlert,
-  Edit,
-  Gift,
-  PlusCircle,
-  MinusCircle,
-  Upload,
-  FileText,
+  CreditCard, LayoutDashboard, List, Plus, Trash2, Settings, TrendingUp,
+  AlertCircle, Award, CheckCircle2, ChevronDown, Filter, Lock, BookOpen,
+  ExternalLink, ShieldAlert, Edit, Gift, PlusCircle, MinusCircle, Upload, FileText,
 } from "lucide-react";
 import { initializeApp } from "firebase/app";
 import {
-  getAuth,
-  signInWithEmailAndPassword,
-  onAuthStateChanged,
-  signOut,
+  getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut,
 } from "firebase/auth";
 import {
-  getFirestore,
-  collection,
-  query,
-  onSnapshot,
-  addDoc,
-  deleteDoc,
-  doc,
-  setDoc,
-  updateDoc,
+  getFirestore, collection, query, onSnapshot, addDoc, deleteDoc, doc, setDoc, updateDoc,
 } from "firebase/firestore";
 
-// --- HDFC DCB Categories & Rules (Updated for June 2026 MITC) ---
 const CATEGORIES = [
-  { id: "regular", label: "Retail / General eligible spend", multiplier: 1, smartbuy: false, baseEligible: true },
-  { id: "weekend-dining", label: "Weekend dining", multiplier: 2, smartbuy: false, baseEligible: true },
-  { id: "grocery", label: "Groceries", multiplier: 1, smartbuy: false, baseEligible: true, rewardCapKey: "groceryMonthlyRewardCap" },
-  { id: "smartbuy-igp", label: "SmartBuy IGP.com", multiplier: 10, smartbuy: true, baseEligible: true },
-  { id: "smartbuy-flights", label: "SmartBuy flights", multiplier: 5, smartbuy: true, baseEligible: true },
-  { id: "smartbuy-hotels", label: "SmartBuy hotels", multiplier: 10, smartbuy: true, baseEligible: true },
-  { id: "smartbuy-trains", label: "SmartBuy trains", multiplier: 3, smartbuy: true, baseEligible: true },
-  { id: "smartbuy-buses", label: "SmartBuy buses", multiplier: 5, smartbuy: true, baseEligible: true },
-  { id: "smartbuy-vouchers", label: "SmartBuy brand vouchers", multiplier: 3, smartbuy: true, baseEligible: true },
-  { id: "smartbuy-apple", label: "SmartBuy Apple Imagine/Tresor", multiplier: 3, smartbuy: true, baseEligible: true },
-  { id: "smartbuy-myntra", label: "SmartBuy Myntra", multiplier: 5, smartbuy: true, baseEligible: true },
-  { id: "smartbuy-jockey", label: "SmartBuy Jockey", multiplier: 10, smartbuy: true, baseEligible: true },
-  { id: "smartbuy-mmt-holidays", label: "SmartBuy MMT holiday packages", multiplier: 5, smartbuy: true, baseEligible: true },
-  { id: "smartbuy-pharmeasy", label: "SmartBuy Pharmeasy", multiplier: 10, smartbuy: true, baseEligible: true },
-  { id: "smartbuy-dutyfree", label: "SmartBuy Duty Free", multiplier: 5, smartbuy: true, baseEligible: true },
-  { id: "smartbuy-drivado", label: "SmartBuy Drivado", multiplier: 5, smartbuy: true, baseEligible: true },
-  { id: "insurance", label: "Insurance", multiplier: 1, smartbuy: false, baseEligible: true, rewardCapKey: "insuranceMonthlyRewardCap" },
-  { id: "rent", label: "Rent payment", multiplier: 0, smartbuy: false, baseEligible: false, isRent: true },
-  { id: "fuel", label: "Fuel", multiplier: 0, smartbuy: false, baseEligible: false, isFuel: true },
-  { id: "utility", label: "Utility", multiplier: 1, smartbuy: false, baseEligible: true, rewardCapKey: "utilityMonthlyRewardCap", isUtility: true },
-  { id: "telecom", label: "Telecom", multiplier: 1, smartbuy: false, baseEligible: true, rewardCapKey: "telecomMonthlyRewardCap" },
-  { id: "upi", label: "UPI card purchase", multiplier: 1, smartbuy: false, baseEligible: true },
-  { id: "education-third-party", label: "Education via third-party app", multiplier: 0, smartbuy: false, baseEligible: false, isThirdPartyEd: true },
-  { id: "government", label: "Government transaction", multiplier: 0, smartbuy: false, baseEligible: false },
-  { id: "wallet", label: "Wallet loading", multiplier: 0, smartbuy: false, baseEligible: false },
-  { id: "gaming", label: "Online skill gaming", multiplier: 0, smartbuy: false, baseEligible: false },
-  { id: "emi", label: "Converted to EMI / SmartEMI", multiplier: 0, smartbuy: false, baseEligible: false },
-  { id: "excluded", label: "Excluded / no reward", multiplier: 0, smartbuy: false, baseEligible: false },
+  { id: "regular", label: "Retail / General eligible spend", multiplier: 1, smartbuy: false, baseEligible: true, color: "text-zinc-700" },
+  { id: "weekend-dining", label: "Weekend dining", multiplier: 2, smartbuy: false, baseEligible: true, color: "text-orange-600" },
+  { id: "grocery", label: "Groceries", multiplier: 1, smartbuy: false, baseEligible: true, rewardCapKey: "groceryMonthlyRewardCap", color: "text-emerald-600" },
+  { id: "smartbuy-igp", label: "SmartBuy IGP.com", multiplier: 10, smartbuy: true, baseEligible: true, color: "text-violet-700" },
+  { id: "smartbuy-flights", label: "SmartBuy flights", multiplier: 5, smartbuy: true, baseEligible: true, color: "text-blue-600" },
+  { id: "smartbuy-hotels", label: "SmartBuy hotels", multiplier: 10, smartbuy: true, baseEligible: true, color: "text-fuchsia-600" },
+  { id: "smartbuy-trains", label: "SmartBuy trains", multiplier: 3, smartbuy: true, baseEligible: true, color: "text-cyan-700" },
+  { id: "smartbuy-buses", label: "SmartBuy buses", multiplier: 5, smartbuy: true, baseEligible: true, color: "text-teal-600" },
+  { id: "smartbuy-vouchers", label: "SmartBuy brand vouchers", multiplier: 3, smartbuy: true, baseEligible: true, color: "text-purple-600" },
+  { id: "smartbuy-apple", label: "SmartBuy Apple Imagine/Tresor", multiplier: 3, smartbuy: true, baseEligible: true, color: "text-slate-700" },
+  { id: "smartbuy-myntra", label: "SmartBuy Myntra", multiplier: 5, smartbuy: true, baseEligible: true, color: "text-pink-600" },
+  { id: "smartbuy-jockey", label: "SmartBuy Jockey", multiplier: 10, smartbuy: true, baseEligible: true, color: "text-rose-700" },
+  { id: "smartbuy-mmt-holidays", label: "SmartBuy MMT holiday packages", multiplier: 5, smartbuy: true, baseEligible: true, color: "text-sky-600" },
+  { id: "smartbuy-pharmeasy", label: "SmartBuy Pharmeasy", multiplier: 10, smartbuy: true, baseEligible: true, color: "text-teal-700" },
+  { id: "smartbuy-dutyfree", label: "SmartBuy Duty Free", multiplier: 5, smartbuy: true, baseEligible: true, color: "text-indigo-600" },
+  { id: "smartbuy-drivado", label: "SmartBuy Drivado", multiplier: 5, smartbuy: true, baseEligible: true, color: "text-blue-700" },
+  { id: "insurance", label: "Insurance", multiplier: 1, smartbuy: false, baseEligible: true, rewardCapKey: "insuranceMonthlyRewardCap", color: "text-rose-600" },
+  { id: "rent", label: "Rent payment", multiplier: 0, smartbuy: false, baseEligible: false, isRent: true, color: "text-red-600" },
+  { id: "fuel", label: "Fuel", multiplier: 0, smartbuy: false, baseEligible: false, isFuel: true, color: "text-zinc-600" },
+  { id: "utility", label: "Utility", multiplier: 1, smartbuy: false, baseEligible: true, rewardCapKey: "utilityMonthlyRewardCap", isUtility: true, color: "text-amber-700" },
+  { id: "telecom", label: "Telecom", multiplier: 1, smartbuy: false, baseEligible: true, rewardCapKey: "telecomMonthlyRewardCap", color: "text-indigo-700" },
+  { id: "education-third-party", label: "Education via third-party app", multiplier: 0, smartbuy: false, baseEligible: false, isThirdPartyEd: true, color: "text-red-500" },
+  { id: "government", label: "Government transaction", multiplier: 0, smartbuy: false, baseEligible: false, color: "text-zinc-500" },
+  { id: "wallet", label: "Wallet loading", multiplier: 0, smartbuy: false, baseEligible: false, color: "text-zinc-500" },
+  { id: "gaming", label: "Online skill gaming", multiplier: 0, smartbuy: false, baseEligible: false, color: "text-zinc-500" },
+  { id: "emi", label: "Converted to EMI / SmartEMI", multiplier: 0, smartbuy: false, baseEligible: false, color: "text-zinc-500" },
+  { id: "excluded", label: "Excluded / no reward", multiplier: 0, smartbuy: false, baseEligible: false, color: "text-zinc-500" },
 ];
 
 const CAPS = {
@@ -127,39 +95,27 @@ export default function App() {
   const [selMonth, setSelMonth] = useState(currentDate.getMonth() + 1);
   const [selYear, setSelYear] = useState(currentDate.getFullYear());
   const [filterHolder, setFilterHolder] = useState("All");
-  
-  // NEW VIEW TOGGLE STATE
-  const [viewMode, setViewMode] = useState("calendar"); // "calendar" or "statement"
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showPolicyModal, setShowPolicyModal] = useState(false);
   const [showRewardModal, setShowRewardModal] = useState(false);
-  
   const [showUploadModal, setShowUploadModal] = useState(false);
+  
   const [stagedTxns, setStagedTxns] = useState([]);
   const fileInputRef = useRef(null);
 
   const [editHolders, setEditHolders] = useState([...DEFAULT_CARDHOLDERS]);
-
   const [isEditing, setIsEditing] = useState(false);
   const [editTxnId, setEditTxnId] = useState(null);
   const [refundInput, setRefundInput] = useState("");
 
   const [newTxn, setNewTxn] = useState({
-    date: new Date().toISOString().substring(0, 10),
-    amount: "",
-    categoryId: CATEGORIES[0].id,
-    cardHolder: "",
-    remarks: "",
+    date: new Date().toISOString().substring(0, 10), amount: "", categoryId: CATEGORIES[0].id, cardHolder: "", remarks: "",
   });
 
   const [newReward, setNewReward] = useState({
-    date: new Date().toISOString().substring(0, 10),
-    type: "adjustment",
-    points: "",
-    cardHolder: "",
-    remarks: "",
+    date: new Date().toISOString().substring(0, 10), type: "adjustment", points: "", cardHolder: "", remarks: "",
   });
 
   useEffect(() => {
@@ -173,42 +129,30 @@ export default function App() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setAuthError("");
-    try {
-      await signInWithEmailAndPassword(auth, emailInput, passwordInput);
-    } catch (error) {
-      setAuthError("Incorrect Email or Password.");
-    }
+    try { await signInWithEmailAndPassword(auth, emailInput, passwordInput); } 
+    catch (error) { setAuthError("Incorrect Email or Password."); }
   };
 
   const handleLogout = async () => await signOut(auth);
 
   useEffect(() => {
     if (!user) return;
-
     const unsubTxn = onSnapshot(query(collection(db, "family_transactions")), (snapshot) => {
       setTransactions(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
       setLoading(false);
     });
-
     const unsubRewards = onSnapshot(query(collection(db, "family_rewards")), (snapshot) => {
       setRewardsLog(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     });
-
     const unsubSet = onSnapshot(doc(db, "family_settings", "profile"), (docSnap) => {
       if (docSnap.exists() && docSnap.data().cardholders) {
         setCardholders(docSnap.data().cardholders);
         setEditHolders(docSnap.data().cardholders);
       }
     });
-
-    return () => {
-      unsubTxn();
-      unsubRewards();
-      unsubSet();
-    };
+    return () => { unsubTxn(); unsubRewards(); unsubSet(); };
   }, [user]);
 
-  // CORE CALCULATION ENGINE (Strictly follows Calendar Month logic for accurate HDFC Caps)
   const processedData = useMemo(() => {
     const sorted = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
     const monthlyState = {};
@@ -221,11 +165,11 @@ export default function App() {
 
       if (!monthlyState[monthKey]) {
         monthlyState[monthKey] = {
-          groceryMonthlyRewardCap: 0, utilityMonthlyRewardCap: 0, telecomMonthlyRewardCap: 0,
-          insuranceMonthlyRewardCap: 0, smartBuyBonusRP: 0, dailyDining: {},
+          groceryMonthlyRewardCap: 0, utilityMonthlyRewardCap: 0, telecomMonthlyRewardCap: 0, insuranceMonthlyRewardCap: 0, 
+          smartBuyBonusRP: 0, dailyDining: {},
+          sb3xRP: 0, sb5xRP: 0, sb10xRP: 0, diningBonusRP: 0, // New Drill-down Trackers
           totalSpend: 0, totalEarnedRP: 0, totalFees: 0, 
-          feeBreakdown: { rent: 0, utility: 0, fuel: 0, education: 0 },
-          cardholderSpends: {},
+          feeBreakdown: { rent: 0, utility: 0, fuel: 0, education: 0 }, cardholderSpends: {},
         };
       }
 
@@ -266,6 +210,12 @@ export default function App() {
         const potentialBonus = Math.floor(txn.amount / 150) * (5 * (category.multiplier - 1));
         const allowedBonus = Math.min(potentialBonus, CAPS.SMARTBUY_BONUS_MONTHLY - mState.smartBuyBonusRP);
         mState.smartBuyBonusRP += allowedBonus;
+        
+        // Populate specific drill-down buckets
+        if (category.multiplier === 3) mState.sb3xRP += allowedBonus;
+        else if (category.multiplier === 5) mState.sb5xRP += allowedBonus;
+        else if (category.multiplier === 10) mState.sb10xRP += allowedBonus;
+
         finalBaseRP = rawBaseRP;
         finalBonusRP = allowedBonus;
         earnedRP = finalBaseRP + finalBonusRP;
@@ -275,6 +225,10 @@ export default function App() {
         const diningBonus = Math.floor(txn.amount / 150) * 5;
         const allowedBonus = Math.min(diningBonus, CAPS.DINING_DAILY - mState.dailyDining[dateKey]);
         mState.dailyDining[dateKey] += allowedBonus;
+        
+        // Populate dining drill-down
+        mState.diningBonusRP += allowedBonus;
+
         finalBaseRP = rawBaseRP;
         finalBonusRP = allowedBonus;
         earnedRP = finalBaseRP + finalBonusRP;
@@ -296,62 +250,13 @@ export default function App() {
       lifetimeEarnedRP[txn.cardHolder] = (lifetimeEarnedRP[txn.cardHolder] || 0) + earnedRP;
 
       processedTxns.push({ 
-        ...txn, 
-        earnedRP, 
-        baseRP: finalBaseRP, 
-        bonusRP: finalBonusRP, 
-        note, 
-        fee, 
-        feeNote, 
-        categoryLabel: category.label 
+        ...txn, earnedRP, baseRP: finalBaseRP, bonusRP: finalBonusRP, 
+        note, fee, feeNote, categoryLabel: category.label, categoryColor: category.color 
       });
     });
 
     return { processedTxns: processedTxns.reverse(), monthlyState, lifetimeEarnedRP };
   }, [transactions]);
-
-  // DATE FILTRATION ENGINE (Handles the Toggle between Statement & Calendar views)
-  const filteredTxns = useMemo(() => {
-    return processedData.processedTxns.filter((t) => {
-      // 1. Holder Filter
-      if (filterHolder !== "All" && t.cardHolder !== filterHolder) return false;
-      
-      // 2. Date Filter
-      if (viewMode === "calendar") {
-        return t.date.startsWith(`${selYear}-${String(selMonth).padStart(2, "0")}`);
-      } else {
-        // Statement View: 16th of Prev Month -> 15th of Selected Month
-        let prevMonth = selMonth - 1;
-        let prevYear = selYear;
-        if (prevMonth === 0) { prevMonth = 12; prevYear--; }
-        const startDate = `${prevYear}-${String(prevMonth).padStart(2, "0")}-16`;
-        const endDate = `${selYear}-${String(selMonth).padStart(2, "0")}-15`;
-        return t.date >= startDate && t.date <= endDate;
-      }
-    });
-  }, [processedData.processedTxns, filterHolder, selMonth, selYear, viewMode]);
-
-  // Dynamic Dashboard Stats based strictly on the current View Toggle
-  const viewStats = useMemo(() => {
-    let spend = 0, points = 0, fees = 0;
-    let cardholderSpends = {};
-    let feeBreakdown = { rent: 0, utility: 0, fuel: 0, education: 0 };
-    
-    filteredTxns.forEach(t => {
-      spend += t.amount;
-      points += t.earnedRP;
-      fees += t.fee || 0;
-      cardholderSpends[t.cardHolder] = (cardholderSpends[t.cardHolder] || 0) + t.amount;
-      
-      const cat = CATEGORIES.find(c => c.id === t.categoryId) || CATEGORIES[0];
-      if (cat.isRent) feeBreakdown.rent += t.fee;
-      if (cat.isThirdPartyEd) feeBreakdown.education += t.fee;
-      if (cat.isUtility && t.amount > 50000) feeBreakdown.utility += t.fee;
-      if (cat.isFuel && t.amount > 15000) feeBreakdown.fuel += t.fee;
-    });
-    
-    return { spend, points, fees, cardholderSpends, feeBreakdown };
-  }, [filteredTxns]);
 
   const rewardsBalance = useMemo(() => {
     const balances = {};
@@ -369,6 +274,8 @@ export default function App() {
 
     return balances;
   }, [processedData.lifetimeEarnedRP, rewardsLog, cardholders]);
+
+  const monthKey = `${selYear}-${String(selMonth).padStart(2, "0")}`;
 
   const quarterStats = useMemo(() => {
     const quarter = Math.ceil(selMonth / 3);
@@ -403,110 +310,65 @@ export default function App() {
     return { spend: annualSpend, earnedRP: annualRP, target: CAPS.ANNUAL_MILESTONE, progress: Math.min((annualSpend / CAPS.ANNUAL_MILESTONE) * 100, 100), label: `Anniversary (Jun ${startYear} - May ${startYear + 1})` };
   }, [selMonth, selYear, filterHolder, processedData.monthlyState]);
 
-  // We explicitly fetch the CALENDAR month limits here to show the correct status bars.
-  const calendarCappingStats = processedData.monthlyState[`${selYear}-${String(selMonth).padStart(2, "0")}`] || {
-    groceryMonthlyRewardCap: 0, utilityMonthlyRewardCap: 0, telecomMonthlyRewardCap: 0,
-    insuranceMonthlyRewardCap: 0, smartBuyBonusRP: 0
+  const currentStats = processedData.monthlyState[monthKey] || {
+    groceryMonthlyRewardCap: 0, utilityMonthlyRewardCap: 0, telecomMonthlyRewardCap: 0, insuranceMonthlyRewardCap: 0,
+    smartBuyBonusRP: 0, sb3xRP: 0, sb5xRP: 0, sb10xRP: 0, diningBonusRP: 0,
+    totalSpend: 0, totalEarnedRP: 0, totalFees: 0, cardholderSpends: {},
   };
 
   const openAddModal = () => {
-    setIsEditing(false);
-    setEditTxnId(null);
-    setNewTxn({
-      date: new Date().toISOString().substring(0, 10),
-      amount: "",
-      categoryId: CATEGORIES[0].id,
-      cardHolder: cardholders.length > 0 ? cardholders[0] : "",
-      remarks: "",
-    });
-    setRefundInput("");
+    setIsEditing(false); setEditTxnId(null); setRefundInput("");
+    setNewTxn({ date: new Date().toISOString().substring(0, 10), amount: "", categoryId: CATEGORIES[0].id, cardHolder: cardholders.length > 0 ? cardholders[0] : "", remarks: "" });
     setShowAddModal(true);
   };
 
   const openEditModal = (txn) => {
-    setIsEditing(true);
-    setEditTxnId(txn.id);
-    setNewTxn({
-      date: txn.date,
-      amount: txn.amount,
-      categoryId: txn.categoryId,
-      cardHolder: txn.cardHolder,
-      remarks: txn.remarks || "",
-    });
-    setRefundInput("");
+    setIsEditing(true); setEditTxnId(txn.id); setRefundInput("");
+    setNewTxn({ date: txn.date, amount: txn.amount, categoryId: txn.categoryId, cardHolder: txn.cardHolder, remarks: txn.remarks || "" });
     setShowAddModal(true);
   };
 
   const handleAddTransaction = async (e) => {
     e.preventDefault();
     if (!newTxn.amount || isNaN(newTxn.amount) || newTxn.amount <= 0) return;
-
     let safeCardHolder = newTxn.cardHolder;
-    if (!safeCardHolder || !cardholders.includes(safeCardHolder)) {
-      safeCardHolder = cardholders[0];
-    }
+    if (!safeCardHolder || !cardholders.includes(safeCardHolder)) safeCardHolder = cardholders[0];
 
-    const txnData = {
-      ...newTxn,
-      cardHolder: safeCardHolder,
-      amount: Number(newTxn.amount),
-      createdAt: new Date().toISOString(),
-    };
-
-    if (isEditing && editTxnId) {
-      await updateDoc(doc(db, "family_transactions", editTxnId), txnData);
-    } else {
-      await addDoc(collection(db, "family_transactions"), txnData);
-    }
-
+    const txnData = { ...newTxn, cardHolder: safeCardHolder, amount: Number(newTxn.amount), createdAt: new Date().toISOString() };
+    if (isEditing && editTxnId) await updateDoc(doc(db, "family_transactions", editTxnId), txnData);
+    else await addDoc(collection(db, "family_transactions"), txnData);
     setShowAddModal(false);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this transaction?")) {
-      await deleteDoc(doc(db, "family_transactions", id));
-    }
-  };
+  // Direct deletes without standard confirm popups to prevent browser blockers
+  const handleDelete = async (id) => await deleteDoc(doc(db, "family_transactions", id));
+  const handleDeleteReward = async (id) => await deleteDoc(doc(db, "family_rewards", id));
 
-  // --- CSV PARSING LOGIC (With Tilde-Pipe Support & Auto Predictor) ---
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (evt) => {
       const text = evt.target.result;
-      
       const isPipeDelimited = text.includes('~|~');
-      
       const rows = text.split('\n').map(row => {
-          if (isPipeDelimited) {
-              return row.split('~|~').map(cell => cell.trim());
-          } else {
-              const cells = [];
-              let currentCell = '';
-              for(let i=0; i<row.length; i++) {
-                  if(row[i] === ',') {
-                     cells.push(currentCell.trim());
-                     currentCell = '';
-                  } else if (row[i] !== '\r') {
-                     currentCell += row[i];
-                  }
-              }
-              cells.push(currentCell.trim());
-              return cells;
+          if (isPipeDelimited) return row.split('~|~').map(cell => cell.trim());
+          const cells = []; let currentCell = '';
+          for(let i=0; i<row.length; i++) {
+              if(row[i] === ',') { cells.push(currentCell.trim()); currentCell = ''; } 
+              else if (row[i] !== '\r') currentCell += row[i];
           }
+          cells.push(currentCell.trim());
+          return cells;
       });
 
       const extracted = [];
       let transactionIndex = 0;
       
-      rows.forEach((row) => {
+      rows.forEach((row, index) => {
           if (!row || !Array.isArray(row) || row.length < 3) return;
-          
           const dateCellIndex = row.findIndex(cell => cell && cell.match(/^\d{2}\/\d{2}\/\d{4}/));
           if (dateCellIndex === -1) return; 
-          
           const isCr = row.some(cell => cell && cell.toUpperCase() === 'CR');
           if (isCr) return;
           
@@ -520,10 +382,7 @@ export default function App() {
               const cell = row[i];
               if (cell && typeof cell === 'string') {
                   const clean = cell.replace(/,/g, '').trim();
-                  if (/^\d+(\.\d+)?$/.test(clean)) { 
-                      amount = parseFloat(clean); 
-                      break; 
-                  }
+                  if (/^\d+(\.\d+)?$/.test(clean)) { amount = parseFloat(clean); break; }
               }
           }
           if (amount <= 0) return;
@@ -532,54 +391,33 @@ export default function App() {
           for (let i = dateCellIndex + 1; i < row.length; i++) {
               const cell = row[i];
               if (cell && cell.trim().length > 3 && !/^\d+(\.\d+)?$/.test(cell.replace(/,/g, ''))) {
-                  desc = cell.trim();
-                  break;
+                  desc = cell.trim(); break;
               }
           }
           
           let matchedHolder = cardholders.length > 0 ? cardholders[0] : "Primary Card";
           row.forEach(cell => {
              if (cell && typeof cell === 'string') {
-                 cardholders.forEach(h => {
-                     if (cell.toUpperCase().includes(h.toUpperCase())) matchedHolder = h;
-                 });
+                 cardholders.forEach(h => { if (cell.toUpperCase().includes(h.toUpperCase())) matchedHolder = h; });
              }
           });
-
-          // --- AUTO-PREDICT CATEGORY LOGIC ---
-          let predictedCategory = CATEGORIES[0].id; // Default Retail
-          const descUpper = desc.toUpperCase();
-          if (descUpper.includes("SMARTBUY") || descUpper.includes("SB EMT")) {
-              if (descUpper.includes("MYNTRA")) predictedCategory = "smartbuy-myntra";
-              else if (descUpper.includes("FLIGHT")) predictedCategory = "smartbuy-flights";
-              else if (descUpper.includes("HOTEL")) predictedCategory = "smartbuy-hotels";
-              else if (descUpper.includes("TRAIN")) predictedCategory = "smartbuy-trains";
-              else if (descUpper.includes("GYFTR") || descUpper.includes("VOUCHER")) predictedCategory = "smartbuy-vouchers";
-              else predictedCategory = "smartbuy-vouchers";
-          } else if (descUpper.includes("DMART") || descUpper.includes("STAR BAZAAR") || descUpper.includes("RELIANCE FRESH") || descUpper.includes("GROCERY") || descUpper.includes("BLINKIT") || descUpper.includes("ZEPTO") || descUpper.includes("SWIGGY INSTAMART")) {
-              predictedCategory = "grocery";
-          } else if (descUpper.includes("NETFLIX") || descUpper.includes("AIRTEL") || descUpper.includes("JIO ") || descUpper.includes("RECHARGE") || descUpper.includes("BILLDESK")) {
-              predictedCategory = "utility";
-          } else if (descUpper.includes("INSURANCE") || descUpper.includes("LIC ")) {
-              predictedCategory = "insurance";
-          }
-          // ------------------------------------
           
-          const isDuplicate = transactions.some(t => 
-            t.date === formattedDate && 
-            t.amount === amount && 
-            t.cardHolder === matchedHolder
-          );
+          // Auto-Predictor Logic
+          let guessedCatId = CATEGORIES[0].id; // Default retail
+          const descUp = desc.toUpperCase();
+          if (descUp.includes("MYNTRA")) guessedCatId = "smartbuy-myntra";
+          else if (descUp.includes("GYFTR VIA SMARTBUY")) guessedCatId = "smartbuy-vouchers";
+          else if (descUp.includes("SB EMT FLIGHT") || descUp.includes("SMARTBUY FLIGHT")) guessedCatId = "smartbuy-flights";
+          else if (descUp.includes("STAR BAZAAR") || descUp.includes("DMART") || descUp.includes("RELIANCE SMART")) guessedCatId = "grocery";
+          else if (descUp.includes("NETFLIX") || descUp.includes("PAYTM RECHARGE") || descUp.includes("AIRTEL")) guessedCatId = "telecom";
+          else if (descUp.includes("PAYTM FASTAG") || descUp.includes("PZFASTAG")) guessedCatId = "fuel";
+          else if (descUp.includes("AMAZON SELLER SERVICES")) guessedCatId = "regular"; // Base shopping
+
+          const isDuplicate = transactions.some(t => t.date === formattedDate && t.amount === amount && t.cardHolder === matchedHolder);
           
           extracted.push({
-              id: 'staged_' + transactionIndex++,
-              date: formattedDate,
-              amount: amount,
-              remarks: desc,
-              categoryId: predictedCategory,
-              cardHolder: matchedHolder,
-              selected: !isDuplicate, 
-              isDuplicate: isDuplicate
+              id: 'staged_' + transactionIndex++, date: formattedDate, amount: amount, remarks: desc, 
+              categoryId: guessedCatId, cardHolder: matchedHolder, selected: !isDuplicate, isDuplicate: isDuplicate
           });
       });
       setStagedTxns(extracted);
@@ -589,9 +427,7 @@ export default function App() {
     e.target.value = ""; 
   };
 
-  const updateStagedTxn = (id, field, value) => {
-    setStagedTxns(prev => prev.map(t => t.id === id ? { ...t, [field]: value } : t));
-  };
+  const updateStagedTxn = (id, field, value) => setStagedTxns(prev => prev.map(t => t.id === id ? { ...t, [field]: value } : t));
 
   const handleImportStaged = async () => {
     const toImport = stagedTxns.filter(t => t.selected);
@@ -600,9 +436,7 @@ export default function App() {
       cleanTxn.createdAt = new Date().toISOString();
       await addDoc(collection(db, "family_transactions"), cleanTxn);
     }
-    setShowUploadModal(false);
-    setStagedTxns([]);
-    setActiveTab("logs");
+    setShowUploadModal(false); setStagedTxns([]); setActiveTab("logs");
   };
 
   const handleAddReward = async (e) => {
@@ -610,33 +444,18 @@ export default function App() {
     if (!newReward.points || isNaN(newReward.points) || newReward.points <= 0) return;
     const rewardData = { ...newReward, points: Number(newReward.points), createdAt: new Date().toISOString() };
     await addDoc(collection(db, "family_rewards"), rewardData);
-    setShowRewardModal(false);
-    setNewReward({ ...newReward, points: "", remarks: "" });
-  };
-
-  const handleDeleteReward = async (id) => {
-    if (window.confirm("Delete this points record?")) {
-      await deleteDoc(doc(db, "family_rewards", id));
-    }
+    setShowRewardModal(false); setNewReward({ ...newReward, points: "", remarks: "" });
   };
 
   const handleSaveSettings = async () => {
     const changedNames = [];
-    cardholders.forEach((oldName, i) => {
-      if (oldName !== editHolders[i]) changedNames.push({ old: oldName, new: editHolders[i] });
-    });
-
+    cardholders.forEach((oldName, i) => { if (oldName !== editHolders[i]) changedNames.push({ old: oldName, new: editHolders[i] }); });
     await setDoc(doc(db, "family_settings", "profile"), { cardholders: editHolders }, { merge: true });
-
     for (const change of changedNames) {
       const matchingTxns = transactions.filter((t) => t.cardHolder === change.old);
-      for (const t of matchingTxns) {
-        await updateDoc(doc(db, "family_transactions", t.id), { cardHolder: change.new });
-      }
+      for (const t of matchingTxns) await updateDoc(doc(db, "family_transactions", t.id), { cardHolder: change.new });
       const matchingRewards = rewardsLog.filter((r) => r.cardHolder === change.old);
-      for (const r of matchingRewards) {
-        await updateDoc(doc(db, "family_rewards", r.id), { cardHolder: change.new });
-      }
+      for (const r of matchingRewards) await updateDoc(doc(db, "family_rewards", r.id), { cardHolder: change.new });
     }
     setShowSettingsModal(false);
   };
@@ -646,10 +465,8 @@ export default function App() {
       <div className="flex flex-col h-screen items-center justify-center bg-zinc-900 font-sans p-4 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at center, #a1a1aa 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
         <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm text-center relative z-10 flex flex-col">
-          <div className="bg-amber-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-600">
-            <Lock size={32} />
-          </div>
-          <h2 className="text-2xl font-bold text-zinc-900 mb-2">HDFC Diners Black Metal Spends Tracker</h2>
+          <div className="bg-amber-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-600"><Lock size={32} /></div>
+          <h2 className="text-2xl font-bold text-zinc-900 mb-2">HDFC Diners Black Metal Tracker</h2>
           <p className="text-zinc-500 text-sm mb-6">Enter your email and password to access the tracker.</p>
           <form onSubmit={handleLogin} className="space-y-4">
             <input type="email" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} placeholder="Email ID" className="w-full text-center text-lg font-medium border border-zinc-200 rounded-xl p-4 focus:ring-2 focus:ring-amber-500 outline-none bg-zinc-50" autoFocus />
@@ -658,33 +475,23 @@ export default function App() {
             <button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 rounded-xl shadow-sm transition-colors">Secure Login</button>
           </form>
         </div>
-        <div className="mt-8 text-zinc-500 text-xs font-medium relative z-10 flex items-center gap-2">
-          <ShieldAlert size={14} /> Contact Rohit Chopra for any issues or access requirement
-        </div>
+        <div className="mt-8 text-zinc-500 text-xs font-medium relative z-10 flex items-center gap-2"><ShieldAlert size={14} /> Contact Rohit Chopra for any issues or access requirement</div>
       </div>
     );
   }
 
+  const filteredTxns = processedData.processedTxns.filter((t) => t.date.startsWith(monthKey) && (filterHolder === "All" || t.cardHolder === filterHolder));
+  const displayTotalSpend = filterHolder === "All" ? currentStats.totalSpend : (currentStats.cardholderSpends[filterHolder] || 0);
   const isPolicyUpdateDue = (new Date().getFullYear() - 2026) * 12 + (new Date().getMonth() - 5) >= 6;
-
-  // Formatting strings for display
-  let prevMonth = selMonth - 1; let prevYear = selYear;
-  if (prevMonth === 0) { prevMonth = 12; prevYear--; }
-  const stmtDateLabel = `16 ${MONTHS[prevMonth-1]} - 15 ${MONTHS[selMonth-1]}`;
-  const calDateLabel = `${MONTHS[selMonth-1]} ${selYear}`;
 
   if (loading) return <div className="flex h-screen items-center justify-center bg-zinc-50"><div className="animate-pulse text-zinc-500 font-medium">Loading Diners Club Data...</div></div>;
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-zinc-100 font-sans text-zinc-800">
       
-      {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-64 bg-zinc-900 text-zinc-100 flex-col transition-all">
         <div className="p-6">
-          <div className="flex items-center gap-3 text-amber-500 mb-2">
-            <CreditCard size={28} />
-            <h1 className="text-xl font-bold tracking-wider uppercase text-zinc-100">DCB Metal</h1>
-          </div>
+          <div className="flex items-center gap-3 text-amber-500 mb-2"><CreditCard size={28} /><h1 className="text-xl font-bold tracking-wider uppercase text-zinc-100">DCB Metal</h1></div>
           <p className="text-xs text-zinc-400 font-medium tracking-wide">REWARDS TRACKER</p>
         </div>
         <nav className="flex-1 px-4 space-y-2 mt-4">
@@ -702,7 +509,6 @@ export default function App() {
         </div>
       </aside>
 
-      {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 w-full bg-zinc-900 border-t border-zinc-800 z-40 flex justify-around p-3 pb-safe shadow-2xl">
         <button onClick={() => setActiveTab("dashboard")} className={`flex flex-col items-center gap-1 ${activeTab === "dashboard" ? "text-amber-500" : "text-zinc-500"}`}><LayoutDashboard size={20} /><span className="text-[10px] font-medium">Dashboard</span></button>
         <button onClick={() => setActiveTab("logs")} className={`flex flex-col items-center gap-1 ${activeTab === "logs" ? "text-amber-500" : "text-zinc-500"}`}><List size={20} /><span className="text-[10px] font-medium">Logs</span></button>
@@ -710,7 +516,6 @@ export default function App() {
         <button onClick={() => setShowSettingsModal(true)} className="flex flex-col items-center gap-1 text-zinc-500"><Settings size={20} /><span className="text-[10px] font-medium">Settings</span></button>
       </nav>
 
-      {/* Main App Content Area */}
       <main className="flex-1 overflow-y-auto pb-24 md:pb-0">
         <div className="p-4 md:p-8 max-w-6xl mx-auto">
           
@@ -720,21 +525,10 @@ export default function App() {
               <p className="text-zinc-500 text-sm mt-1">Track family spends and maximize returns.</p>
             </div>
             <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-              
-              {/* DATE VIEW TOGGLE (CALENDAR VS STATEMENT) */}
-              <div className="bg-zinc-200 p-1 rounded-xl flex items-center shadow-inner mr-1">
-                <button onClick={() => setViewMode("calendar")} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'calendar' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`}>
-                  Calendar
-                </button>
-                <button onClick={() => setViewMode("statement")} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'statement' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`}>
-                  Statement
-                </button>
-              </div>
-
               <div className="bg-white border border-zinc-200 px-3 py-2 rounded-xl flex items-center gap-2 shadow-sm relative flex-1 md:flex-none">
                 <Filter size={16} className="text-amber-500" />
                 <select value={filterHolder} onChange={(e) => setFilterHolder(e.target.value)} className="bg-transparent border-none focus:outline-none text-zinc-800 text-sm font-medium pr-4 appearance-none w-full cursor-pointer">
-                  <option value="All">All Spends</option>
+                  <option value="All">All Family Spends</option>
                   {cardholders.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
                 <ChevronDown className="absolute right-2 top-2.5 text-zinc-400 pointer-events-none" size={14} />
@@ -750,7 +544,7 @@ export default function App() {
               </div>
 
               <button onClick={() => fileInputRef.current.click()} className="bg-white border border-zinc-200 hover:bg-zinc-50 text-zinc-800 px-4 py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 shadow-sm text-sm w-full md:w-auto transition-colors">
-                <Upload size={16} className="text-blue-500" /> CSV
+                <Upload size={16} className="text-blue-500" /> CSV Import
               </button>
               <input type="file" accept=".csv" ref={fileInputRef} className="hidden" onChange={handleFileUpload} />
 
@@ -763,15 +557,12 @@ export default function App() {
           {activeTab === "dashboard" && (
             <div className="space-y-6">
               
-              {/* PRIMARY SPEND BOX (Dynamically switches based on Calendar or Statement toggle) */}
               <div className="bg-white p-4 md:p-6 rounded-2xl border border-zinc-200 shadow-sm">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                  <h3 className="text-lg font-bold text-zinc-900">
-                    Total Spend <span className="text-zinc-400 font-normal">({viewMode === 'calendar' ? calDateLabel : `${stmtDateLabel}, ${selYear}`})</span>
-                  </h3>
+                  <h3 className="text-lg font-bold text-zinc-900">Total Spend ({MONTHS[selMonth - 1]} {selYear})</h3>
                   <div className="text-left md:text-right">
-                    <div className="text-2xl md:text-3xl font-black text-zinc-800">₹ {viewStats.spend.toLocaleString("en-IN", {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                    <div className="text-sm font-bold text-green-600">+{filterHolder === "All" ? viewStats.points.toLocaleString("en-IN") : "Family Calc"} RP Earned in this view</div>
+                    <div className="text-2xl md:text-3xl font-black text-zinc-800">₹ {displayTotalSpend.toLocaleString("en-IN", {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                    <div className="text-sm font-bold text-green-600">+{filterHolder === "All" ? currentStats.totalEarnedRP.toLocaleString("en-IN") : "Family Calc"} RP Earned This Month</div>
                   </div>
                 </div>
                 {filterHolder === "All" && (
@@ -779,7 +570,7 @@ export default function App() {
                     {cardholders.map((holder) => (
                       <div key={holder} className="bg-zinc-50 p-3 rounded-xl border border-zinc-100">
                         <div className="text-xs text-zinc-500 font-medium mb-1 truncate">{holder}</div>
-                        <div className="text-base font-bold text-zinc-800">₹ {(viewStats.cardholderSpends[holder] || 0).toLocaleString("en-IN", {maximumFractionDigits: 2})}</div>
+                        <div className="text-base font-bold text-zinc-800">₹ {(currentStats.cardholderSpends[holder] || 0).toLocaleString("en-IN", {maximumFractionDigits: 2})}</div>
                       </div>
                     ))}
                   </div>
@@ -821,61 +612,111 @@ export default function App() {
                 )}
               </div>
 
-              {/* HDFC Bank Fees Tracker Card */}
+              {}
+              <div className="bg-white p-4 md:p-6 rounded-2xl border border-zinc-200 shadow-sm">
+                <h3 className="text-base md:text-lg font-bold text-zinc-900 mb-6 flex items-center gap-2">
+                  <List size={18} className="text-amber-500" /> Rewards Program Points Summary
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm border-collapse">
+                    <thead>
+                      <tr className="bg-zinc-50 border-b border-zinc-200 text-zinc-500">
+                        <th className="p-3 font-bold uppercase tracking-wider text-[11px]">Programs</th>
+                        <th className="p-3 font-bold uppercase tracking-wider text-[11px] text-right">Bonus Points Earned</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-100">
+                      <tr className="hover:bg-zinc-50">
+                        <td className="p-3 font-medium text-orange-700">DB 2XRP Weekend Dining</td>
+                        <td className="p-3 font-bold text-zinc-900 text-right">{currentStats.diningBonusRP.toLocaleString("en-IN")} pts</td>
+                      </tr>
+                      <tr className="hover:bg-zinc-50">
+                        <td className="p-3 font-medium text-emerald-700">Reward Points on Grocery</td>
+                        <td className="p-3 font-bold text-zinc-900 text-right">{currentStats.groceryMonthlyRewardCap.toLocaleString("en-IN")} pts</td>
+                      </tr>
+                      <tr className="hover:bg-zinc-50">
+                        <td className="p-3 font-medium text-indigo-700">Reward Points on Telecom</td>
+                        <td className="p-3 font-bold text-zinc-900 text-right">{currentStats.telecomMonthlyRewardCap.toLocaleString("en-IN")} pts</td>
+                      </tr>
+                      <tr className="hover:bg-zinc-50">
+                        <td className="p-3 font-medium text-amber-700">Reward Points on Utility</td>
+                        <td className="p-3 font-bold text-zinc-900 text-right">{currentStats.utilityMonthlyRewardCap.toLocaleString("en-IN")} pts</td>
+                      </tr>
+                      <tr className="hover:bg-zinc-50">
+                        <td className="p-3 font-medium text-rose-700">Reward Points on Insurance</td>
+                        <td className="p-3 font-bold text-zinc-900 text-right">{currentStats.insuranceMonthlyRewardCap.toLocaleString("en-IN")} pts</td>
+                      </tr>
+                      <tr className="hover:bg-amber-50 bg-amber-50/30">
+                        <td className="p-3 font-medium text-cyan-800">SmartBuy Bonus 3X RP Promo</td>
+                        <td className="p-3 font-black text-amber-700 text-right">{currentStats.sb3xRP.toLocaleString("en-IN")} pts</td>
+                      </tr>
+                      <tr className="hover:bg-amber-50 bg-amber-50/30">
+                        <td className="p-3 font-medium text-blue-800">SmartBuy Bonus 5X RP Promo</td>
+                        <td className="p-3 font-black text-amber-700 text-right">{currentStats.sb5xRP.toLocaleString("en-IN")} pts</td>
+                      </tr>
+                      <tr className="hover:bg-amber-50 bg-amber-50/30">
+                        <td className="p-3 font-medium text-fuchsia-800">SmartBuy Bonus 10X RP Promo</td>
+                        <td className="p-3 font-black text-amber-700 text-right">{currentStats.sb10xRP.toLocaleString("en-IN")} pts</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {}
               <div className="bg-white p-4 md:p-6 rounded-2xl border border-zinc-200 shadow-sm">
                 <h3 className="text-base md:text-lg font-bold text-zinc-900 mb-6 flex items-center gap-2">
                   <AlertCircle className="text-red-500" size={18} /> Bank Surcharges & Fees (1%)
+                  <span className="text-[10px] font-normal text-zinc-500 ml-1 hidden md:inline">(Capped at ₹3,000 per txn)</span>
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <div className="bg-red-50 p-4 rounded-xl border border-red-100 col-span-2 md:col-span-1">
                     <div className="text-xs text-red-600 font-bold mb-1 uppercase tracking-wider">Total Fees</div>
-                    <div className="text-xl font-black text-red-700">₹ {viewStats.fees.toLocaleString("en-IN", {maximumFractionDigits: 2})}</div>
+                    <div className="text-xl font-black text-red-700">₹ {currentStats.totalFees.toLocaleString("en-IN", {maximumFractionDigits: 2})}</div>
                   </div>
                   <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-100">
                     <div className="text-xs text-zinc-500 font-medium mb-1">Rental Fees</div>
-                    <div className="text-lg font-bold text-zinc-800">₹ {(viewStats.feeBreakdown.rent).toLocaleString("en-IN", {maximumFractionDigits: 2})}</div>
+                    <div className="text-lg font-bold text-zinc-800">₹ {(currentStats.feeBreakdown?.rent || 0).toLocaleString("en-IN", {maximumFractionDigits: 2})}</div>
                   </div>
                   <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-100">
                     <div className="text-xs text-zinc-500 font-medium mb-1">Utility (&gt;50k)</div>
-                    <div className="text-lg font-bold text-zinc-800">₹ {(viewStats.feeBreakdown.utility).toLocaleString("en-IN", {maximumFractionDigits: 2})}</div>
+                    <div className="text-lg font-bold text-zinc-800">₹ {(currentStats.feeBreakdown?.utility || 0).toLocaleString("en-IN", {maximumFractionDigits: 2})}</div>
                   </div>
                   <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-100">
                     <div className="text-xs text-zinc-500 font-medium mb-1">Fuel (&gt;15k)</div>
-                    <div className="text-lg font-bold text-zinc-800">₹ {(viewStats.feeBreakdown.fuel).toLocaleString("en-IN", {maximumFractionDigits: 2})}</div>
+                    <div className="text-lg font-bold text-zinc-800">₹ {(currentStats.feeBreakdown?.fuel || 0).toLocaleString("en-IN", {maximumFractionDigits: 2})}</div>
                   </div>
                   <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-100">
                     <div className="text-xs text-zinc-500 font-medium mb-1">Education</div>
-                    <div className="text-lg font-bold text-zinc-800">₹ {(viewStats.feeBreakdown.education).toLocaleString("en-IN", {maximumFractionDigits: 2})}</div>
+                    <div className="text-lg font-bold text-zinc-800">₹ {(currentStats.feeBreakdown?.education || 0).toLocaleString("en-IN", {maximumFractionDigits: 2})}</div>
                   </div>
                 </div>
               </div>
 
-              {/* MONTHLY CAP STATUS - This ALWAYS stays strictly bound to Calendar Month logic */}
-              <div className="bg-white p-4 md:p-6 rounded-2xl border border-zinc-200 shadow-sm border-t-4 border-t-green-500">
-                <h3 className="text-base md:text-lg font-bold text-zinc-900 mb-2 flex items-center gap-2">
-                  <CheckCircle2 className="text-green-500" size={18} /> Official Calendar Month Caps
+              <div className="bg-white p-4 md:p-6 rounded-2xl border border-zinc-200 shadow-sm">
+                <h3 className="text-base md:text-lg font-bold text-zinc-900 mb-6 flex items-center gap-2">
+                  <CheckCircle2 className="text-green-500" size={18} /> Family Monthly Capping Status
                 </h3>
-                <p className="text-xs text-zinc-500 mb-6">These rules are locked to the 1st of every month ({calDateLabel}), regardless of your statement cycle.</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-6">
                   <div>
-                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium"><span className="text-zinc-700">SmartBuy Bonus</span><span className={calendarCappingStats.smartBuyBonusRP >= CAPS.SMARTBUY_BONUS_MONTHLY ? "text-red-500" : "text-zinc-500"}>{calendarCappingStats.smartBuyBonusRP.toLocaleString("en-IN")} / 10,000</span></div>
-                    <div className="w-full bg-zinc-100 rounded-full h-1.5"><div className={`h-1.5 rounded-full ${calendarCappingStats.smartBuyBonusRP >= CAPS.SMARTBUY_BONUS_MONTHLY ? "bg-red-500" : "bg-blue-500"}`} style={{ width: `${Math.min((calendarCappingStats.smartBuyBonusRP / CAPS.SMARTBUY_BONUS_MONTHLY) * 100, 100)}%` }}></div></div>
+                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium"><span className="text-zinc-700">SmartBuy Bonus</span><span className={currentStats.smartBuyBonusRP >= CAPS.SMARTBUY_BONUS_MONTHLY ? "text-red-500" : "text-zinc-500"}>{currentStats.smartBuyBonusRP.toLocaleString("en-IN")} / 10,000</span></div>
+                    <div className="w-full bg-zinc-100 rounded-full h-1.5"><div className={`h-1.5 rounded-full ${currentStats.smartBuyBonusRP >= CAPS.SMARTBUY_BONUS_MONTHLY ? "bg-red-500" : "bg-blue-500"}`} style={{ width: `${Math.min((currentStats.smartBuyBonusRP / CAPS.SMARTBUY_BONUS_MONTHLY) * 100, 100)}%` }}></div></div>
                   </div>
                   <div>
-                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium"><span className="text-zinc-700">Grocery Points</span><span className={calendarCappingStats.groceryMonthlyRewardCap >= CAPS.groceryMonthlyRewardCap ? "text-red-500" : "text-zinc-500"}>{calendarCappingStats.groceryMonthlyRewardCap.toLocaleString("en-IN")} / 2,000</span></div>
-                    <div className="w-full bg-zinc-100 rounded-full h-1.5"><div className={`h-1.5 rounded-full ${calendarCappingStats.groceryMonthlyRewardCap >= CAPS.groceryMonthlyRewardCap ? "bg-red-500" : "bg-green-500"}`} style={{ width: `${Math.min((calendarCappingStats.groceryMonthlyRewardCap / CAPS.groceryMonthlyRewardCap) * 100, 100)}%` }}></div></div>
+                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium"><span className="text-zinc-700">Grocery Points</span><span className={currentStats.groceryMonthlyRewardCap >= CAPS.groceryMonthlyRewardCap ? "text-red-500" : "text-zinc-500"}>{currentStats.groceryMonthlyRewardCap.toLocaleString("en-IN")} / 2,000</span></div>
+                    <div className="w-full bg-zinc-100 rounded-full h-1.5"><div className={`h-1.5 rounded-full ${currentStats.groceryMonthlyRewardCap >= CAPS.groceryMonthlyRewardCap ? "bg-red-500" : "bg-emerald-500"}`} style={{ width: `${Math.min((currentStats.groceryMonthlyRewardCap / CAPS.groceryMonthlyRewardCap) * 100, 100)}%` }}></div></div>
                   </div>
                   <div>
-                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium"><span className="text-zinc-700">Telecom Points</span><span className={calendarCappingStats.telecomMonthlyRewardCap >= CAPS.telecomMonthlyRewardCap ? "text-red-500" : "text-zinc-500"}>{calendarCappingStats.telecomMonthlyRewardCap.toLocaleString("en-IN")} / 2,000</span></div>
-                    <div className="w-full bg-zinc-100 rounded-full h-1.5"><div className={`h-1.5 rounded-full ${calendarCappingStats.telecomMonthlyRewardCap >= CAPS.telecomMonthlyRewardCap ? "bg-red-500" : "bg-indigo-500"}`} style={{ width: `${Math.min((calendarCappingStats.telecomMonthlyRewardCap / CAPS.telecomMonthlyRewardCap) * 100, 100)}%` }}></div></div>
+                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium"><span className="text-zinc-700">Telecom Points</span><span className={currentStats.telecomMonthlyRewardCap >= CAPS.telecomMonthlyRewardCap ? "text-red-500" : "text-zinc-500"}>{currentStats.telecomMonthlyRewardCap.toLocaleString("en-IN")} / 2,000</span></div>
+                    <div className="w-full bg-zinc-100 rounded-full h-1.5"><div className={`h-1.5 rounded-full ${currentStats.telecomMonthlyRewardCap >= CAPS.telecomMonthlyRewardCap ? "bg-red-500" : "bg-indigo-500"}`} style={{ width: `${Math.min((currentStats.telecomMonthlyRewardCap / CAPS.telecomMonthlyRewardCap) * 100, 100)}%` }}></div></div>
                   </div>
                   <div>
-                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium"><span className="text-zinc-700">Utility Points</span><span className={calendarCappingStats.utilityMonthlyRewardCap >= CAPS.utilityMonthlyRewardCap ? "text-red-500" : "text-zinc-500"}>{calendarCappingStats.utilityMonthlyRewardCap.toLocaleString("en-IN")} / 2,000</span></div>
-                    <div className="w-full bg-zinc-100 rounded-full h-1.5"><div className={`h-1.5 rounded-full ${calendarCappingStats.utilityMonthlyRewardCap >= CAPS.utilityMonthlyRewardCap ? "bg-red-500" : "bg-purple-500"}`} style={{ width: `${Math.min((calendarCappingStats.utilityMonthlyRewardCap / CAPS.utilityMonthlyRewardCap) * 100, 100)}%` }}></div></div>
+                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium"><span className="text-zinc-700">Utility Points</span><span className={currentStats.utilityMonthlyRewardCap >= CAPS.utilityMonthlyRewardCap ? "text-red-500" : "text-zinc-500"}>{currentStats.utilityMonthlyRewardCap.toLocaleString("en-IN")} / 2,000</span></div>
+                    <div className="w-full bg-zinc-100 rounded-full h-1.5"><div className={`h-1.5 rounded-full ${currentStats.utilityMonthlyRewardCap >= CAPS.utilityMonthlyRewardCap ? "bg-red-500" : "bg-amber-500"}`} style={{ width: `${Math.min((currentStats.utilityMonthlyRewardCap / CAPS.utilityMonthlyRewardCap) * 100, 100)}%` }}></div></div>
                   </div>
                   <div>
-                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium"><span className="text-zinc-700">Insurance Points</span><span className={calendarCappingStats.insuranceMonthlyRewardCap >= CAPS.insuranceMonthlyRewardCap ? "text-red-500" : "text-zinc-500"}>{calendarCappingStats.insuranceMonthlyRewardCap.toLocaleString("en-IN")} / 5,000</span></div>
-                    <div className="w-full bg-zinc-100 rounded-full h-1.5"><div className={`h-1.5 rounded-full ${calendarCappingStats.insuranceMonthlyRewardCap >= CAPS.insuranceMonthlyRewardCap ? "bg-red-500" : "bg-pink-500"}`} style={{ width: `${Math.min((calendarCappingStats.insuranceMonthlyRewardCap / CAPS.insuranceMonthlyRewardCap) * 100, 100)}%` }}></div></div>
+                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium"><span className="text-zinc-700">Insurance Points</span><span className={currentStats.insuranceMonthlyRewardCap >= CAPS.insuranceMonthlyRewardCap ? "text-red-500" : "text-zinc-500"}>{currentStats.insuranceMonthlyRewardCap.toLocaleString("en-IN")} / 5,000</span></div>
+                    <div className="w-full bg-zinc-100 rounded-full h-1.5"><div className={`h-1.5 rounded-full ${currentStats.insuranceMonthlyRewardCap >= CAPS.insuranceMonthlyRewardCap ? "bg-red-500" : "bg-rose-500"}`} style={{ width: `${Math.min((currentStats.insuranceMonthlyRewardCap / CAPS.insuranceMonthlyRewardCap) * 100, 100)}%` }}></div></div>
                   </div>
                 </div>
               </div>
@@ -898,15 +739,16 @@ export default function App() {
                   </thead>
                   <tbody className="divide-y divide-zinc-100">
                     {filteredTxns.length === 0 ? (
-                      <tr><td colSpan="6" className="p-8 text-center text-zinc-500">No transactions found for this period view.</td></tr>
+                      <tr><td colSpan="6" className="p-8 text-center text-zinc-500">No transactions found for this period.</td></tr>
                     ) : (
                       filteredTxns.map((txn) => (
                         <tr key={txn.id} className="hover:bg-zinc-50/50 transition-colors">
                           <td className="p-4 text-sm text-zinc-800">{formatDate(txn.date)}</td>
                           <td className="p-4 text-sm"><span className="bg-zinc-100 text-zinc-700 px-2.5 py-1 rounded-md font-medium text-xs">{txn.cardHolder}</span></td>
                           <td className="p-4 text-sm text-zinc-800">
-                            {txn.categoryLabel}
-                            {txn.remarks && <span className="block text-xs text-zinc-500 mt-0.5">{txn.remarks}</span>}
+                            {/* Color-coded Tag */}
+                            <span className={`bg-zinc-100 px-2.5 py-1 rounded-md font-bold text-[10px] uppercase tracking-wider ${txn.categoryColor || 'text-zinc-700'}`}>{txn.categoryLabel}</span>
+                            {txn.remarks && <span className="block text-xs text-zinc-500 mt-1">{txn.remarks}</span>}
                             {txn.feeNote && <span className="block text-[10px] text-red-500 mt-0.5 font-bold uppercase tracking-wider">{txn.feeNote}</span>}
                             {txn.note && <span className="block text-[10px] text-amber-500 mt-0.5 font-bold uppercase tracking-wider">{txn.note}</span>}
                           </td>
@@ -919,7 +761,8 @@ export default function App() {
                               <div className="flex flex-col items-end">
                                 <span className="text-sm font-bold text-green-600">+{txn.baseRP} Base</span>
                                 {txn.bonusRP > 0 && (
-                                  <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider mt-0.5">
+                                  /* Color-coded Bonus Points */
+                                  <span className={`text-[10px] font-bold uppercase tracking-wider mt-0.5 ${txn.categoryColor || 'text-amber-500'}`}>
                                     +{txn.bonusRP} Bonus
                                   </span>
                                 )}
@@ -999,7 +842,7 @@ export default function App() {
         </div>
       </main>
 
-      {/* --- CSV STAGING WIZARD MODAL --- */}
+      {}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col animate-in fade-in zoom-in-95">
@@ -1053,17 +896,15 @@ export default function App() {
                           </td>
                           <td className="p-3 text-sm font-bold text-zinc-900 text-right">₹ {txn.amount.toLocaleString("en-IN", {minimumFractionDigits:2})}</td>
                           <td className="p-3">
-                            <select value={txn.categoryId} onChange={e => updateStagedTxn(txn.id, 'categoryId', e.target.value)} className="w-full text-sm border border-zinc-200 rounded-lg p-2 bg-white outline-none focus:ring-2 focus:ring-blue-500">
-                              {CATEGORIES.map(cat => <option key={cat.id} value={cat.id}>{cat.label}</option>)}
+                            <select value={txn.categoryId} onChange={e => updateStagedTxn(txn.id, 'categoryId', e.target.value)} className={`w-full text-[12px] font-bold border border-zinc-200 rounded-lg p-2 outline-none focus:ring-2 focus:ring-blue-500 ${category.color || 'bg-white'}`}>
+                              {CATEGORIES.map(cat => <option key={cat.id} value={cat.id} className={cat.color}>{cat.label}</option>)}
                             </select>
                           </td>
-                          <td className="p-3 text-right align-middle">
-                            {baseRP === 0 && bonusRP === 0 ? (
-                              <span className="text-sm font-bold text-zinc-400">0</span>
-                            ) : (
+                          <td className="p-3 text-right">
+                            {!category.baseEligible ? <span className="text-xs font-bold text-zinc-400">0</span> : (
                               <div className="flex flex-col items-end">
-                                {baseRP > 0 && <span className="text-sm font-bold text-green-600">+{baseRP} Base</span>}
-                                {bonusRP > 0 && <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider mt-0.5">+{bonusRP} Bonus</span>}
+                                <span className="text-sm font-bold text-green-600">+{baseRP} Base</span>
+                                {bonusRP > 0 && <span className={`text-[10px] font-bold uppercase tracking-wider mt-0.5 ${category.color}`}>+{bonusRP} Bonus</span>}
                               </div>
                             )}
                           </td>
@@ -1090,7 +931,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Add/Edit Transaction Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
@@ -1121,7 +961,7 @@ export default function App() {
               <div>
                 <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">Category</label>
                 <div className="relative">
-                  <select value={newTxn.categoryId} onChange={(e) => setNewTxn({ ...newTxn, categoryId: e.target.value })} className="w-full border border-zinc-200 rounded-xl p-3 appearance-none focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm">
+                  <select value={newTxn.categoryId} onChange={(e) => setNewTxn({ ...newTxn, categoryId: e.target.value })} className="w-full border border-zinc-200 rounded-xl p-3 appearance-none focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm font-medium">
                     {CATEGORIES.map((cat) => <option key={cat.id} value={cat.id}>{cat.label}</option>)}
                   </select>
                   <ChevronDown className="absolute right-3 top-3.5 text-zinc-400 pointer-events-none" size={16} />
@@ -1137,11 +977,7 @@ export default function App() {
                   <label className="block text-xs font-bold text-amber-800 uppercase tracking-wider">Log a Partial Refund</label>
                   <div className="flex gap-2">
                     <input
-                      type="number"
-                      step="0.01"
-                      placeholder="Refund Amount (₹)"
-                      value={refundInput}
-                      onChange={(e) => setRefundInput(e.target.value)}
+                      type="number" step="0.01" placeholder="Refund Amount (₹)" value={refundInput} onChange={(e) => setRefundInput(e.target.value)}
                       className="flex-1 border border-amber-200 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-amber-500 bg-white"
                     />
                     <button
@@ -1150,11 +986,7 @@ export default function App() {
                         if (!refundInput || isNaN(refundInput) || Number(refundInput) <= 0) return;
                         const newAmt = Math.max(0, Number(newTxn.amount) - Number(refundInput));
                         const refundMsg = `Refund: ₹${refundInput}`;
-                        setNewTxn(prev => ({
-                          ...prev,
-                          amount: Number(newAmt.toFixed(2)),
-                          remarks: prev.remarks ? `${prev.remarks} | ${refundMsg}` : refundMsg
-                        }));
+                        setNewTxn(prev => ({ ...prev, amount: Number(newAmt.toFixed(2)), remarks: prev.remarks ? `${prev.remarks} | ${refundMsg}` : refundMsg }));
                         setRefundInput("");
                       }}
                       className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-2 rounded-lg text-sm transition-colors shadow-sm"
@@ -1177,7 +1009,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Add Reward Points Modal */}
+      {}
       {showRewardModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md animate-in fade-in zoom-in-95 duration-200">
@@ -1218,7 +1050,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Settings Modal */}
+      {}
       {showSettingsModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95">
@@ -1245,7 +1077,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Policy Modal */}
+      {}
       {showPolicyModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-screen flex flex-col animate-in fade-in zoom-in-95">
