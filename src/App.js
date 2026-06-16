@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   CreditCard,
   LayoutDashboard,
@@ -20,6 +20,8 @@ import {
   Gift,
   PlusCircle,
   MinusCircle,
+  Upload,
+  FileText,
 } from "lucide-react";
 import { initializeApp } from "firebase/app";
 import {
@@ -202,7 +204,7 @@ const CATEGORIES = [
     multiplier: 1,
     smartbuy: false,
     baseEligible: true,
-  }, // No cap
+  },
   {
     id: "education-third-party",
     label: "Education via third-party app",
@@ -326,6 +328,12 @@ export default function App() {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showPolicyModal, setShowPolicyModal] = useState(false);
   const [showRewardModal, setShowRewardModal] = useState(false);
+
+  // Staging Modal States
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [stagedTxns, setStagedTxns] = useState([]);
+  const fileInputRef = useRef(null);
+
   const [editHolders, setEditHolders] = useState([...DEFAULT_CARDHOLDERS]);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -683,7 +691,6 @@ export default function App() {
     e.preventDefault();
     if (!newTxn.amount || isNaN(newTxn.amount) || newTxn.amount <= 0) return;
 
-    // Ghost State safety check: Force selection if somehow blank
     let safeCardHolder = newTxn.cardHolder;
     if (!safeCardHolder || !cardholders.includes(safeCardHolder)) {
       safeCardHolder = cardholders[0];
@@ -692,7 +699,7 @@ export default function App() {
     const txnData = {
       ...newTxn,
       cardHolder: safeCardHolder,
-      amount: Number(newTxn.amount), // Automatically saves the decimals
+      amount: Number(newTxn.amount),
       createdAt: new Date().toISOString(),
     };
 
@@ -709,6 +716,150 @@ export default function App() {
     if (window.confirm("Are you sure you want to delete this transaction?")) {
       await deleteDoc(doc(db, "family_transactions", id));
     }
+  };
+
+  // --- CSV PARSING LOGIC (Replaced XLSX dependency) ---
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const text = evt.target.result;
+
+      // Parse CSV Text into a 2D Array
+      // Handling basic CSV format which HDFC statements usually come in
+      const rows = text.split("\n").map((row) => {
+        // Split by commas, handling cases where quotes are used (basic implementation)
+        const inQuotes = false;
+        let currentCell = "";
+        const cells = [];
+        for (let i = 0; i < row.length; i++) {
+          if (row[i] === ",") {
+            cells.push(currentCell.trim());
+            currentCell = "";
+          } else if (row[i] !== "\r") {
+            currentCell += row[i];
+          }
+        }
+        cells.push(currentCell.trim());
+        return cells;
+      });
+
+      const extracted = [];
+      let transactionIndex = 0;
+
+      rows.forEach((row, index) => {
+        if (!row || !Array.isArray(row) || row.length < 3) return;
+
+        // Looking for a date string DD/MM/YYYY in any column, usually the 9th or 10th cell
+        const dateCellIndex = row.findIndex(
+          (cell) => cell && cell.match(/^\d{2}\/\d{2}\/\d{4}/)
+        );
+        if (dateCellIndex === -1) return; // Skip non-transaction rows
+
+        // Ignore if it's a Credit (Payment/Refund) - look for 'CR' or 'Cr'
+        const isCr = row.some((cell) => cell && cell.toUpperCase() === "CR");
+        if (isCr) return;
+
+        // Parse Date (Usually "26/05/2026 / 21:57" format)
+        const rawDateStr = row[dateCellIndex];
+        const rawDate = rawDateStr.split(" ")[0].split("/")[0].includes("/")
+          ? rawDateStr.split(" ")[0]
+          : rawDateStr.split("/")[0] +
+            "/" +
+            rawDateStr.split("/")[1] +
+            "/" +
+            rawDateStr.split("/")[2].substring(0, 4); // Try to extract DD/MM/YYYY
+        const parts = rawDate.split("/");
+        if (parts.length !== 3) return;
+        const [day, month, year] = parts;
+        const formattedDate = `${year}-${month}-${day}`;
+
+        // Parse Amount
+        // HDFC statements usually have the amount near the end. We'll look for the first valid numeric string from the right.
+        let amount = 0;
+        for (let i = row.length - 1; i >= 0; i--) {
+          const cell = row[i];
+          if (cell && typeof cell === "string") {
+            const clean = cell.replace(/,/g, "").trim();
+            if (/^\d+(\.\d+)?$/.test(clean)) {
+              amount = parseFloat(clean);
+              break;
+            }
+          }
+        }
+        if (amount <= 0) return;
+
+        // Parse Description
+        let desc = "";
+        for (let i = dateCellIndex + 1; i < row.length; i++) {
+          const cell = row[i];
+          // Description is usually a long string, ignore amounts.
+          if (
+            cell &&
+            cell.trim().length > 3 &&
+            !/^\d+(\.\d+)?$/.test(cell.replace(/,/g, ""))
+          ) {
+            desc = cell.trim();
+            break;
+          }
+        }
+
+        // Match Cardholder
+        let matchedHolder =
+          cardholders.length > 0 ? cardholders[0] : "Primary Card";
+        row.forEach((cell) => {
+          if (cell && typeof cell === "string") {
+            cardholders.forEach((h) => {
+              if (cell.toLowerCase().includes(h.toLowerCase()))
+                matchedHolder = h;
+            });
+          }
+        });
+
+        // Check if already in DB (Exact match on Date, Amount, and Cardholder)
+        const isDuplicate = transactions.some(
+          (t) =>
+            t.date === formattedDate &&
+            t.amount === amount &&
+            t.cardHolder === matchedHolder
+        );
+
+        extracted.push({
+          id: "staged_" + transactionIndex++,
+          date: formattedDate,
+          amount: amount,
+          remarks: desc,
+          categoryId: CATEGORIES[0].id,
+          cardHolder: matchedHolder,
+          selected: !isDuplicate, // Auto-uncheck duplicates!
+          isDuplicate: isDuplicate,
+        });
+      });
+      setStagedTxns(extracted);
+      setShowUploadModal(true);
+    };
+    reader.readAsText(file);
+    e.target.value = ""; // Reset input so you can re-upload the same file if needed
+  };
+
+  const updateStagedTxn = (id, field, value) => {
+    setStagedTxns((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, [field]: value } : t))
+    );
+  };
+
+  const handleImportStaged = async () => {
+    const toImport = stagedTxns.filter((t) => t.selected);
+    for (const txn of toImport) {
+      const { selected, isDuplicate, id, ...cleanTxn } = txn;
+      cleanTxn.createdAt = new Date().toISOString();
+      await addDoc(collection(db, "family_transactions"), cleanTxn);
+    }
+    setShowUploadModal(false);
+    setStagedTxns([]);
+    setActiveTab("logs"); // Jump to logs to see the new data!
   };
 
   const handleAddReward = async (e) => {
@@ -768,7 +919,6 @@ export default function App() {
   if (!user) {
     return (
       <div className="flex flex-col h-screen items-center justify-center bg-zinc-900 font-sans p-4 relative overflow-hidden">
-        {/* Subtle Matrix Dots Background */}
         <div
           className="absolute inset-0 opacity-10 pointer-events-none"
           style={{
@@ -777,8 +927,6 @@ export default function App() {
             backgroundSize: "24px 24px",
           }}
         ></div>
-
-        {/* Central Login Box */}
         <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm text-center relative z-10 flex flex-col">
           <div className="bg-amber-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-600">
             <Lock size={32} />
@@ -816,8 +964,6 @@ export default function App() {
             </button>
           </form>
         </div>
-
-        {/* Stacked Footer Text */}
         <div className="mt-8 text-zinc-500 text-xs font-medium relative z-10 flex items-center gap-2">
           <ShieldAlert size={14} /> Contact Rohit Chopra for any issues or
           access requirement
@@ -849,7 +995,7 @@ export default function App() {
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-zinc-100 font-sans text-zinc-800">
-      {/* Desktop Sidebar (Hidden on Mobile) */}
+      {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-64 bg-zinc-900 text-zinc-100 flex-col transition-all">
         <div className="p-6">
           <div className="flex items-center gap-3 text-amber-500 mb-2">
@@ -924,7 +1070,7 @@ export default function App() {
         </div>
       </aside>
 
-      {/* Mobile Bottom Navigation (Visible only on small screens) */}
+      {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 w-full bg-zinc-900 border-t border-zinc-800 z-40 flex justify-around p-3 pb-safe shadow-2xl">
         <button
           onClick={() => setActiveTab("dashboard")}
@@ -1019,9 +1165,25 @@ export default function App() {
                   ))}
                 </select>
               </div>
+
+              {/* NEW UPLOAD CSV BUTTON */}
+              <button
+                onClick={() => fileInputRef.current.click()}
+                className="bg-white border border-zinc-200 hover:bg-zinc-50 text-zinc-800 px-4 py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 shadow-sm text-sm w-full md:w-auto transition-colors"
+              >
+                <Upload size={16} className="text-blue-500" /> CSV Import
+              </button>
+              <input
+                type="file"
+                accept=".csv"
+                ref={fileInputRef}
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+
               <button
                 onClick={openAddModal}
-                className="bg-zinc-900 hover:bg-zinc-800 text-white px-4 py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 shadow-sm text-sm w-full md:w-auto"
+                className="bg-zinc-900 hover:bg-zinc-800 text-white px-4 py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 shadow-sm text-sm w-full md:w-auto transition-colors"
               >
                 <Plus size={16} /> Add Spend
               </button>
@@ -1507,7 +1669,6 @@ export default function App() {
                             })}
                           </td>
 
-                          {/* --- NEW STACKED REWARDS UI START --- */}
                           <td className="p-4 text-right align-middle">
                             {txn.earnedRP === 0 ? (
                               <span className="text-sm font-bold text-zinc-400">
@@ -1526,7 +1687,6 @@ export default function App() {
                               </div>
                             )}
                           </td>
-                          {/* --- NEW STACKED REWARDS UI END --- */}
 
                           <td className="p-4 text-center">
                             <div className="flex justify-center gap-1">
@@ -1685,6 +1845,210 @@ export default function App() {
           )}
         </div>
       </main>
+
+      {/* --- CSV STAGING WIZARD MODAL --- */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col animate-in fade-in zoom-in-95">
+            <div className="p-5 border-b border-zinc-100 flex justify-between items-center bg-zinc-50 rounded-t-2xl">
+              <div>
+                <h3 className="text-lg font-bold text-zinc-900 flex items-center gap-2">
+                  <FileText className="text-blue-500" size={20} /> CSV Import
+                  Wizard
+                </h3>
+                <p className="text-xs text-zinc-500 mt-0.5">
+                  Assign categories to your new transactions before saving.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowUploadModal(false)}
+                className="text-zinc-400 hover:text-zinc-600 bg-white p-2 rounded-full shadow-sm border border-zinc-200"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="overflow-y-auto p-0 flex-1">
+              <table className="w-full text-left border-collapse whitespace-nowrap">
+                <thead className="sticky top-0 bg-white shadow-sm z-10">
+                  <tr className="border-b border-zinc-200 text-[11px] uppercase tracking-wider text-zinc-500">
+                    <th className="p-3 text-center">
+                      <CheckCircle2 size={16} className="mx-auto" />
+                    </th>
+                    <th className="p-3 font-bold">Date & Cardholder</th>
+                    <th className="p-3 font-bold">Description</th>
+                    <th className="p-3 font-bold text-right">Amount</th>
+                    <th className="p-3 font-bold">Assign Category</th>
+                    <th className="p-3 font-bold text-right">Points Preview</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100">
+                  {stagedTxns.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan="6"
+                        className="p-10 text-center text-zinc-500"
+                      >
+                        No valid debits found in this CSV file.
+                      </td>
+                    </tr>
+                  ) : (
+                    stagedTxns.map((txn) => {
+                      const category = CATEGORIES.find(
+                        (c) => c.id === txn.categoryId
+                      );
+                      const baseRP = category.baseEligible
+                        ? Math.floor(txn.amount / 150) * 5
+                        : 0;
+                      let bonusRP = 0;
+                      if (category.smartbuy)
+                        bonusRP =
+                          Math.floor(txn.amount / 150) *
+                          5 *
+                          (category.multiplier - 1);
+                      if (category.id === "weekend-dining")
+                        bonusRP = Math.floor(txn.amount / 150) * 5;
+
+                      return (
+                        <tr
+                          key={txn.id}
+                          className={`hover:bg-zinc-50 ${
+                            !txn.selected ? "opacity-50 grayscale" : ""
+                          }`}
+                        >
+                          <td className="p-3 text-center">
+                            <input
+                              type="checkbox"
+                              checked={txn.selected}
+                              onChange={(e) =>
+                                updateStagedTxn(
+                                  txn.id,
+                                  "selected",
+                                  e.target.checked
+                                )
+                              }
+                              className="w-4 h-4 text-blue-500 rounded border-zinc-300 focus:ring-blue-500"
+                            />
+                          </td>
+                          <td className="p-3">
+                            <div className="text-sm font-bold text-zinc-800">
+                              {formatDate(txn.date)}
+                            </div>
+                            <select
+                              value={txn.cardHolder}
+                              onChange={(e) =>
+                                updateStagedTxn(
+                                  txn.id,
+                                  "cardHolder",
+                                  e.target.value
+                                )
+                              }
+                              className="text-[10px] bg-zinc-100 border border-zinc-200 rounded px-1 py-0.5 mt-1 outline-none text-zinc-700"
+                            >
+                              {cardholders.map((h) => (
+                                <option key={h} value={h}>
+                                  {h}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="p-3">
+                            <input
+                              type="text"
+                              value={txn.remarks}
+                              onChange={(e) =>
+                                updateStagedTxn(
+                                  txn.id,
+                                  "remarks",
+                                  e.target.value
+                                )
+                              }
+                              className="text-sm bg-transparent border-b border-transparent hover:border-zinc-300 focus:border-blue-500 outline-none w-48 text-zinc-700"
+                            />
+                            {txn.isDuplicate && (
+                              <div className="text-[10px] text-red-500 font-bold mt-1">
+                                Already in Tracker (Auto-Skipped)
+                              </div>
+                            )}
+                          </td>
+                          <td className="p-3 text-sm font-bold text-zinc-900 text-right">
+                            ₹{" "}
+                            {txn.amount.toLocaleString("en-IN", {
+                              minimumFractionDigits: 2,
+                            })}
+                          </td>
+                          <td className="p-3">
+                            <select
+                              value={txn.categoryId}
+                              onChange={(e) =>
+                                updateStagedTxn(
+                                  txn.id,
+                                  "categoryId",
+                                  e.target.value
+                                )
+                              }
+                              className="w-full text-sm border border-zinc-200 rounded-lg p-2 bg-white outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              {CATEGORIES.map((cat) => (
+                                <option key={cat.id} value={cat.id}>
+                                  {cat.label}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="p-3 text-right">
+                            {!category.baseEligible ? (
+                              <span className="text-xs font-bold text-zinc-400">
+                                0
+                              </span>
+                            ) : (
+                              <div className="flex flex-col items-end">
+                                <span className="text-sm font-bold text-green-600">
+                                  +{baseRP} Base
+                                </span>
+                                {bonusRP > 0 && (
+                                  <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider mt-0.5">
+                                    +{bonusRP} Bonus
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="p-5 border-t border-zinc-100 bg-zinc-50 rounded-b-2xl flex justify-between items-center">
+              <div className="text-sm text-zinc-600 font-medium">
+                Ready to import:{" "}
+                <span className="font-bold text-blue-600">
+                  {stagedTxns.filter((t) => t.selected).length}
+                </span>{" "}
+                transactions
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowUploadModal(false)}
+                  className="px-5 py-2.5 border border-zinc-200 text-zinc-700 font-bold text-sm rounded-xl hover:bg-white"
+                >
+                  Discard
+                </button>
+                <button
+                  onClick={handleImportStaged}
+                  disabled={stagedTxns.filter((t) => t.selected).length === 0}
+                  className="px-5 py-2.5 bg-blue-600 disabled:bg-blue-300 text-white font-bold text-sm rounded-xl shadow-sm hover:bg-blue-700 transition-colors"
+                >
+                  Save to Tracker
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add/Edit Transaction Modal */}
       {showAddModal && (
