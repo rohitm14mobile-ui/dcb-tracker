@@ -1,17 +1,48 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
-  CreditCard, LayoutDashboard, List, Plus, Trash2, Settings, TrendingUp,
-  AlertCircle, Award, CheckCircle2, ChevronDown, Filter, Lock, BookOpen,
-  ExternalLink, ShieldAlert, Edit, Gift, PlusCircle, MinusCircle, Upload, FileText,
+  CreditCard,
+  LayoutDashboard,
+  List,
+  Plus,
+  Trash2,
+  Settings,
+  TrendingUp,
+  AlertCircle,
+  Award,
+  CheckCircle2,
+  ChevronDown,
+  Filter,
+  Lock,
+  BookOpen,
+  ExternalLink,
+  ShieldAlert,
+  Edit,
+  Gift,
+  PlusCircle,
+  MinusCircle,
+  Upload,
+  FileText,
 } from "lucide-react";
 import { initializeApp } from "firebase/app";
 import {
-  getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut,
+  getAuth,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut,
 } from "firebase/auth";
 import {
-  getFirestore, collection, query, onSnapshot, addDoc, deleteDoc, doc, setDoc, updateDoc,
+  getFirestore,
+  collection,
+  query,
+  onSnapshot,
+  addDoc,
+  deleteDoc,
+  doc,
+  setDoc,
+  updateDoc,
 } from "firebase/firestore";
 
+// --- HDFC DCB Categories & Rules (Updated for June 2026 MITC) ---
 const CATEGORIES = [
   { id: "regular", label: "Retail / General eligible spend", multiplier: 1, smartbuy: false, baseEligible: true, color: "text-zinc-700" },
   { id: "weekend-dining", label: "Weekend dining", multiplier: 2, smartbuy: false, baseEligible: true, color: "text-orange-600" },
@@ -167,7 +198,7 @@ export default function App() {
         monthlyState[monthKey] = {
           groceryMonthlyRewardCap: 0, utilityMonthlyRewardCap: 0, telecomMonthlyRewardCap: 0, insuranceMonthlyRewardCap: 0, 
           smartBuyBonusRP: 0, dailyDining: {},
-          sb3xRP: 0, sb5xRP: 0, sb10xRP: 0, diningBonusRP: 0, // New Drill-down Trackers
+          sb3xRP: 0, sb5xRP: 0, sb10xRP: 0, diningBonusRP: 0,
           totalSpend: 0, totalEarnedRP: 0, totalFees: 0, 
           feeBreakdown: { rent: 0, utility: 0, fuel: 0, education: 0 }, cardholderSpends: {},
         };
@@ -211,7 +242,6 @@ export default function App() {
         const allowedBonus = Math.min(potentialBonus, CAPS.SMARTBUY_BONUS_MONTHLY - mState.smartBuyBonusRP);
         mState.smartBuyBonusRP += allowedBonus;
         
-        // Populate specific drill-down buckets
         if (category.multiplier === 3) mState.sb3xRP += allowedBonus;
         else if (category.multiplier === 5) mState.sb5xRP += allowedBonus;
         else if (category.multiplier === 10) mState.sb10xRP += allowedBonus;
@@ -226,7 +256,6 @@ export default function App() {
         const allowedBonus = Math.min(diningBonus, CAPS.DINING_DAILY - mState.dailyDining[dateKey]);
         mState.dailyDining[dateKey] += allowedBonus;
         
-        // Populate dining drill-down
         mState.diningBonusRP += allowedBonus;
 
         finalBaseRP = rawBaseRP;
@@ -340,7 +369,6 @@ export default function App() {
     setShowAddModal(false);
   };
 
-  // Direct deletes without standard confirm popups to prevent browser blockers
   const handleDelete = async (id) => await deleteDoc(doc(db, "family_transactions", id));
   const handleDeleteReward = async (id) => await deleteDoc(doc(db, "family_rewards", id));
 
@@ -402,8 +430,7 @@ export default function App() {
              }
           });
           
-          // Auto-Predictor Logic
-          let guessedCatId = CATEGORIES[0].id; // Default retail
+          let guessedCatId = CATEGORIES[0].id; 
           const descUp = desc.toUpperCase();
           if (descUp.includes("MYNTRA")) guessedCatId = "smartbuy-myntra";
           else if (descUp.includes("GYFTR VIA SMARTBUY")) guessedCatId = "smartbuy-vouchers";
@@ -411,7 +438,7 @@ export default function App() {
           else if (descUp.includes("STAR BAZAAR") || descUp.includes("DMART") || descUp.includes("RELIANCE SMART")) guessedCatId = "grocery";
           else if (descUp.includes("NETFLIX") || descUp.includes("PAYTM RECHARGE") || descUp.includes("AIRTEL")) guessedCatId = "telecom";
           else if (descUp.includes("PAYTM FASTAG") || descUp.includes("PZFASTAG")) guessedCatId = "fuel";
-          else if (descUp.includes("AMAZON SELLER SERVICES")) guessedCatId = "regular"; // Base shopping
+          else if (descUp.includes("AMAZON SELLER SERVICES")) guessedCatId = "regular"; 
 
           const isDuplicate = transactions.some(t => t.date === formattedDate && t.amount === amount && t.cardHolder === matchedHolder);
           
@@ -612,58 +639,7 @@ export default function App() {
                 )}
               </div>
 
-              {}
-              <div className="bg-white p-4 md:p-6 rounded-2xl border border-zinc-200 shadow-sm">
-                <h3 className="text-base md:text-lg font-bold text-zinc-900 mb-6 flex items-center gap-2">
-                  <List size={18} className="text-amber-500" /> Rewards Program Points Summary
-                </h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm border-collapse">
-                    <thead>
-                      <tr className="bg-zinc-50 border-b border-zinc-200 text-zinc-500">
-                        <th className="p-3 font-bold uppercase tracking-wider text-[11px]">Programs</th>
-                        <th className="p-3 font-bold uppercase tracking-wider text-[11px] text-right">Bonus Points Earned</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-100">
-                      <tr className="hover:bg-zinc-50">
-                        <td className="p-3 font-medium text-orange-700">DB 2XRP Weekend Dining</td>
-                        <td className="p-3 font-bold text-zinc-900 text-right">{currentStats.diningBonusRP.toLocaleString("en-IN")} pts</td>
-                      </tr>
-                      <tr className="hover:bg-zinc-50">
-                        <td className="p-3 font-medium text-emerald-700">Reward Points on Grocery</td>
-                        <td className="p-3 font-bold text-zinc-900 text-right">{currentStats.groceryMonthlyRewardCap.toLocaleString("en-IN")} pts</td>
-                      </tr>
-                      <tr className="hover:bg-zinc-50">
-                        <td className="p-3 font-medium text-indigo-700">Reward Points on Telecom</td>
-                        <td className="p-3 font-bold text-zinc-900 text-right">{currentStats.telecomMonthlyRewardCap.toLocaleString("en-IN")} pts</td>
-                      </tr>
-                      <tr className="hover:bg-zinc-50">
-                        <td className="p-3 font-medium text-amber-700">Reward Points on Utility</td>
-                        <td className="p-3 font-bold text-zinc-900 text-right">{currentStats.utilityMonthlyRewardCap.toLocaleString("en-IN")} pts</td>
-                      </tr>
-                      <tr className="hover:bg-zinc-50">
-                        <td className="p-3 font-medium text-rose-700">Reward Points on Insurance</td>
-                        <td className="p-3 font-bold text-zinc-900 text-right">{currentStats.insuranceMonthlyRewardCap.toLocaleString("en-IN")} pts</td>
-                      </tr>
-                      <tr className="hover:bg-amber-50 bg-amber-50/30">
-                        <td className="p-3 font-medium text-cyan-800">SmartBuy Bonus 3X RP Promo</td>
-                        <td className="p-3 font-black text-amber-700 text-right">{currentStats.sb3xRP.toLocaleString("en-IN")} pts</td>
-                      </tr>
-                      <tr className="hover:bg-amber-50 bg-amber-50/30">
-                        <td className="p-3 font-medium text-blue-800">SmartBuy Bonus 5X RP Promo</td>
-                        <td className="p-3 font-black text-amber-700 text-right">{currentStats.sb5xRP.toLocaleString("en-IN")} pts</td>
-                      </tr>
-                      <tr className="hover:bg-amber-50 bg-amber-50/30">
-                        <td className="p-3 font-medium text-fuchsia-800">SmartBuy Bonus 10X RP Promo</td>
-                        <td className="p-3 font-black text-amber-700 text-right">{currentStats.sb10xRP.toLocaleString("en-IN")} pts</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {}
+              {/* HDFC Bank Fees Tracker Card */}
               <div className="bg-white p-4 md:p-6 rounded-2xl border border-zinc-200 shadow-sm">
                 <h3 className="text-base md:text-lg font-bold text-zinc-900 mb-6 flex items-center gap-2">
                   <AlertCircle className="text-red-500" size={18} /> Bank Surcharges & Fees (1%)
@@ -693,15 +669,42 @@ export default function App() {
                 </div>
               </div>
 
+              {}
               <div className="bg-white p-4 md:p-6 rounded-2xl border border-zinc-200 shadow-sm">
                 <h3 className="text-base md:text-lg font-bold text-zinc-900 mb-6 flex items-center gap-2">
                   <CheckCircle2 className="text-green-500" size={18} /> Family Monthly Capping Status
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-6">
+                  
+                  {/* SmartBuy with New Drill-down */}
                   <div>
-                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium"><span className="text-zinc-700">SmartBuy Bonus</span><span className={currentStats.smartBuyBonusRP >= CAPS.SMARTBUY_BONUS_MONTHLY ? "text-red-500" : "text-zinc-500"}>{currentStats.smartBuyBonusRP.toLocaleString("en-IN")} / 10,000</span></div>
-                    <div className="w-full bg-zinc-100 rounded-full h-1.5"><div className={`h-1.5 rounded-full ${currentStats.smartBuyBonusRP >= CAPS.SMARTBUY_BONUS_MONTHLY ? "bg-red-500" : "bg-blue-500"}`} style={{ width: `${Math.min((currentStats.smartBuyBonusRP / CAPS.SMARTBUY_BONUS_MONTHLY) * 100, 100)}%` }}></div></div>
+                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium">
+                      <span className="text-zinc-700">SmartBuy Bonus</span>
+                      <span className={currentStats.smartBuyBonusRP >= CAPS.SMARTBUY_BONUS_MONTHLY ? "text-red-500" : "text-zinc-500"}>
+                        {currentStats.smartBuyBonusRP.toLocaleString("en-IN")} / 10,000
+                      </span>
+                    </div>
+                    <div className="w-full bg-zinc-100 rounded-full h-1.5 mb-3">
+                      <div className={`h-1.5 rounded-full ${currentStats.smartBuyBonusRP >= CAPS.SMARTBUY_BONUS_MONTHLY ? "bg-red-500" : "bg-blue-500"}`} style={{ width: `${Math.min((currentStats.smartBuyBonusRP / CAPS.SMARTBUY_BONUS_MONTHLY) * 100, 100)}%` }}></div>
+                    </div>
+                    
+                    <div className="space-y-1.5 pt-1 border-t border-zinc-100">
+                      <div className="flex justify-between text-[11px] items-center">
+                         <span className="text-zinc-500">3X RP Promo</span>
+                         <span className="font-bold text-cyan-700">{currentStats.sb3xRP.toLocaleString("en-IN")} pts</span>
+                      </div>
+                      <div className="flex justify-between text-[11px] items-center">
+                         <span className="text-zinc-500">5X RP Promo</span>
+                         <span className="font-bold text-blue-700">{currentStats.sb5xRP.toLocaleString("en-IN")} pts</span>
+                      </div>
+                      <div className="flex justify-between text-[11px] items-center">
+                         <span className="text-zinc-500">10X RP Promo</span>
+                         <span className="font-bold text-fuchsia-700">{currentStats.sb10xRP.toLocaleString("en-IN")} pts</span>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Standard Trackers */}
                   <div>
                     <div className="flex justify-between text-xs md:text-sm mb-2 font-medium"><span className="text-zinc-700">Grocery Points</span><span className={currentStats.groceryMonthlyRewardCap >= CAPS.groceryMonthlyRewardCap ? "text-red-500" : "text-zinc-500"}>{currentStats.groceryMonthlyRewardCap.toLocaleString("en-IN")} / 2,000</span></div>
                     <div className="w-full bg-zinc-100 rounded-full h-1.5"><div className={`h-1.5 rounded-full ${currentStats.groceryMonthlyRewardCap >= CAPS.groceryMonthlyRewardCap ? "bg-red-500" : "bg-emerald-500"}`} style={{ width: `${Math.min((currentStats.groceryMonthlyRewardCap / CAPS.groceryMonthlyRewardCap) * 100, 100)}%` }}></div></div>
@@ -718,6 +721,19 @@ export default function App() {
                     <div className="flex justify-between text-xs md:text-sm mb-2 font-medium"><span className="text-zinc-700">Insurance Points</span><span className={currentStats.insuranceMonthlyRewardCap >= CAPS.insuranceMonthlyRewardCap ? "text-red-500" : "text-zinc-500"}>{currentStats.insuranceMonthlyRewardCap.toLocaleString("en-IN")} / 5,000</span></div>
                     <div className="w-full bg-zinc-100 rounded-full h-1.5"><div className={`h-1.5 rounded-full ${currentStats.insuranceMonthlyRewardCap >= CAPS.insuranceMonthlyRewardCap ? "bg-red-500" : "bg-rose-500"}`} style={{ width: `${Math.min((currentStats.insuranceMonthlyRewardCap / CAPS.insuranceMonthlyRewardCap) * 100, 100)}%` }}></div></div>
                   </div>
+
+                  {/* Weekend Dining */}
+                  <div className="flex flex-col">
+                    <div className="flex justify-between text-xs md:text-sm mb-2 font-medium">
+                      <span className="text-zinc-700">Weekend Dining (2X)</span>
+                      <span className="text-zinc-500">{currentStats.diningBonusRP.toLocaleString("en-IN")} pts</span>
+                    </div>
+                    <div className="w-full bg-orange-100 rounded-full h-1.5 mb-2">
+                      <div className="h-1.5 rounded-full bg-orange-500 w-full opacity-50"></div>
+                    </div>
+                    <div className="text-[10px] text-zinc-400 mt-auto pt-1">Monthly tally (Capped at 1,000 pts per day)</div>
+                  </div>
+
                 </div>
               </div>
             </div>
@@ -842,7 +858,7 @@ export default function App() {
         </div>
       </main>
 
-      {}
+      {/* --- CSV STAGING WIZARD MODAL --- */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col animate-in fade-in zoom-in-95">
@@ -931,6 +947,7 @@ export default function App() {
         </div>
       )}
 
+      {/* Add/Edit Transaction Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
@@ -1009,7 +1026,7 @@ export default function App() {
         </div>
       )}
 
-      {}
+      {/* Add Reward Points Modal */}
       {showRewardModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md animate-in fade-in zoom-in-95 duration-200">
@@ -1050,7 +1067,7 @@ export default function App() {
         </div>
       )}
 
-      {}
+      {/* Settings Modal */}
       {showSettingsModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95">
@@ -1077,7 +1094,7 @@ export default function App() {
         </div>
       )}
 
-      {}
+      {/* Policy Modal */}
       {showPolicyModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-screen flex flex-col animate-in fade-in zoom-in-95">
