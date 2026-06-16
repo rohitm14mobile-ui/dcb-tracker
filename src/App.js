@@ -727,23 +727,27 @@ export default function App() {
     reader.onload = (evt) => {
       const text = evt.target.result;
 
-      // Parse CSV Text into a 2D Array
-      // Handling basic CSV format which HDFC statements usually come in
+      // Smart Detection: HDFC sometimes uses commas, and sometimes uses "~|~"
+      const isPipeDelimited = text.includes("~|~");
+
       const rows = text.split("\n").map((row) => {
-        // Split by commas, handling cases where quotes are used (basic implementation)
-        const inQuotes = false;
-        let currentCell = "";
-        const cells = [];
-        for (let i = 0; i < row.length; i++) {
-          if (row[i] === ",") {
-            cells.push(currentCell.trim());
-            currentCell = "";
-          } else if (row[i] !== "\r") {
-            currentCell += row[i];
+        if (isPipeDelimited) {
+          return row.split("~|~").map((cell) => cell.trim());
+        } else {
+          // Basic CSV split
+          const cells = [];
+          let currentCell = "";
+          for (let i = 0; i < row.length; i++) {
+            if (row[i] === ",") {
+              cells.push(currentCell.trim());
+              currentCell = "";
+            } else if (row[i] !== "\r") {
+              currentCell += row[i];
+            }
           }
+          cells.push(currentCell.trim());
+          return cells;
         }
-        cells.push(currentCell.trim());
-        return cells;
       });
 
       const extracted = [];
@@ -752,7 +756,7 @@ export default function App() {
       rows.forEach((row, index) => {
         if (!row || !Array.isArray(row) || row.length < 3) return;
 
-        // Looking for a date string DD/MM/YYYY in any column, usually the 9th or 10th cell
+        // Looking for a date string DD/MM/YYYY in any column
         const dateCellIndex = row.findIndex(
           (cell) => cell && cell.match(/^\d{2}\/\d{2}\/\d{4}/)
         );
@@ -762,22 +766,13 @@ export default function App() {
         const isCr = row.some((cell) => cell && cell.toUpperCase() === "CR");
         if (isCr) return;
 
-        // Parse Date (Usually "26/05/2026 / 21:57" format)
+        // Parse Date robustly
         const rawDateStr = row[dateCellIndex];
-        const rawDate = rawDateStr.split(" ")[0].split("/")[0].includes("/")
-          ? rawDateStr.split(" ")[0]
-          : rawDateStr.split("/")[0] +
-            "/" +
-            rawDateStr.split("/")[1] +
-            "/" +
-            rawDateStr.split("/")[2].substring(0, 4); // Try to extract DD/MM/YYYY
-        const parts = rawDate.split("/");
-        if (parts.length !== 3) return;
-        const [day, month, year] = parts;
-        const formattedDate = `${year}-${month}-${day}`;
+        const dateMatch = rawDateStr.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+        if (!dateMatch) return;
+        const formattedDate = `${dateMatch[3]}-${dateMatch[2]}-${dateMatch[1]}`;
 
-        // Parse Amount
-        // HDFC statements usually have the amount near the end. We'll look for the first valid numeric string from the right.
+        // Parse Amount from the right side of the row
         let amount = 0;
         for (let i = row.length - 1; i >= 0; i--) {
           const cell = row[i];
@@ -795,7 +790,6 @@ export default function App() {
         let desc = "";
         for (let i = dateCellIndex + 1; i < row.length; i++) {
           const cell = row[i];
-          // Description is usually a long string, ignore amounts.
           if (
             cell &&
             cell.trim().length > 3 &&
@@ -812,7 +806,8 @@ export default function App() {
         row.forEach((cell) => {
           if (cell && typeof cell === "string") {
             cardholders.forEach((h) => {
-              if (cell.toLowerCase().includes(h.toLowerCase()))
+              // UpperCase match to ensure "Rohit Chopra" matches "ROHIT CHOPRA"
+              if (cell.toUpperCase().includes(h.toUpperCase()))
                 matchedHolder = h;
             });
           }
