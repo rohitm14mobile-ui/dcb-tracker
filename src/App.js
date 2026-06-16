@@ -800,19 +800,46 @@ export default function App() {
           }
         }
 
-        // Match Cardholder
-        let matchedHolder =
-          cardholders.length > 0 ? cardholders[0] : "Primary Card";
-        row.forEach((cell) => {
-          if (cell && typeof cell === "string") {
-            cardholders.forEach((h) => {
-              // UpperCase match to ensure "Rohit Chopra" matches "ROHIT CHOPRA"
-              if (cell.toUpperCase().includes(h.toUpperCase()))
-                matchedHolder = h;
-            });
-          }
-        });
+        // --- NEW AUTO-PREDICT CATEGORY LOGIC ---
+        let predictedCategory = CATEGORIES[0].id; // Default to Retail
+        const descUpper = desc.toUpperCase();
 
+        if (descUpper.includes("SMARTBUY") || descUpper.includes("SB EMT")) {
+          if (descUpper.includes("MYNTRA"))
+            predictedCategory = "smartbuy-myntra";
+          else if (descUpper.includes("FLIGHT"))
+            predictedCategory = "smartbuy-flights";
+          else if (descUpper.includes("HOTEL"))
+            predictedCategory = "smartbuy-hotels";
+          else if (descUpper.includes("TRAIN"))
+            predictedCategory = "smartbuy-trains";
+          else if (descUpper.includes("GYFTR") || descUpper.includes("VOUCHER"))
+            predictedCategory = "smartbuy-vouchers";
+          else predictedCategory = "smartbuy-vouchers"; // Fallback
+        } else if (
+          descUpper.includes("DMART") ||
+          descUpper.includes("STAR BAZAAR") ||
+          descUpper.includes("RELIANCE FRESH") ||
+          descUpper.includes("GROCERY") ||
+          descUpper.includes("BLINKIT") ||
+          descUpper.includes("ZEPTO")
+        ) {
+          predictedCategory = "grocery";
+        } else if (
+          descUpper.includes("NETFLIX") ||
+          descUpper.includes("AIRTEL") ||
+          descUpper.includes("JIO ") ||
+          descUpper.includes("RECHARGE") ||
+          descUpper.includes("BILLDESK")
+        ) {
+          predictedCategory = "utility";
+        } else if (
+          descUpper.includes("INSURANCE") ||
+          descUpper.includes("LIC ")
+        ) {
+          predictedCategory = "insurance";
+        }
+        // ----------------------------------------
         // Check if already in DB (Exact match on Date, Amount, and Cardholder)
         const isDuplicate = transactions.some(
           (t) =>
